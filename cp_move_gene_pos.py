@@ -1,14 +1,13 @@
-#!/usr/bin/python3
-# -*- coding : utf-8 -*-
-##########################################################
-#
-#       Filename: 编程处理模板.py
-#         Author: yuj@genepioneer.cn
-#    Description: sample
-#  Last Modified: 2021-xx-xx 16:29:29
-#
-# Copyright (C) 2021xxxx genepioneer Corporation
-##########################################################
+# -*- encoding: utf-8 -*-
+'''
+@File    :   cp_move_gene_pos.py
+@Time    :   2022/02/16 10:40:22
+@Author  :   yujie 
+@Version :   1.0
+@Contact :   hi@arcsona.cn
+'''
+
+# here put the import lib
 import argparse
 parser = argparse.ArgumentParser(
     add_help=False, usage='\npython3   平移基因修改位置V3.0')
