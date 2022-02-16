@@ -1,5 +1,16 @@
 
 
+
+
+
+
+
+
+
+
+
+
+
 import argparse
 parser = argparse.ArgumentParser(
     add_help=False, usage='\npython3   平移基因修改位置V3.0')
