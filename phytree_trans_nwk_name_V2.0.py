@@ -19,7 +19,7 @@ parser = argparse.ArgumentParser(
 optional = parser.add_argument_group('可选项')
 required = parser.add_argument_group('必选项')
 optional.add_argument(
-    '-1', '--idlist', metavar='[file]', type=str, help='默认id.list',  required=False)
+    '-1', '--idlist', metavar='[file]', type=str, help='输入id.list',  required=False)
 optional.add_argument(
     '-2', '--treenwk', metavar='[file]', type=str, help='默认sample.genome.nwk',  default='sample.genome.nwk',   required=False)
 optional.add_argument(
