@@ -23,7 +23,7 @@ optional.add_argument(
 optional.add_argument(
     '-2', '--treenwk', metavar='[file]', type=str, help='默认sample.genome.nwk',  default='sample.genome.nwk',   required=False)
 optional.add_argument(
-    '-o', '--output', metavar='[file]', type=str, help='默认new.nwk',  default='new.nwk', required=False)
+    '-o', '--output', metavar='[file]', type=str, help='默认phytree.nwk',  default='phytree.nwk', required=False)
 
 
 optional.add_argument(
