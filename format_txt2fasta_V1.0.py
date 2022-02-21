@@ -18,7 +18,7 @@ required = parser.add_argument_group('必选项')
 optional.add_argument('-i', '--input',
                       metavar='[file/dir]', help='目录的话末尾不要加\\,linux不加/', type=str, required=False)
 optional.add_argument(
-    '-c', '--check', metavar='[判断系统]', type=bool, help="linux使用时'-c 1'即可", default='', required=False)                     
+    '-c', '--check', metavar='[判断系统]', type=bool, help="linux使用时'-c 1'即可", default='', required=False)
 optional.add_argument('-h', '--help', action='help', help='[帮助信息]')
 args = parser.parse_args()
 
@@ -26,13 +26,16 @@ args = parser.parse_args()
 def formatting(file):
     with open(file, 'r+') as f:
         content = f.read()
-        f.seek(0, 0)  # 开头偏移0,即开头    
+        f.seek(0, 0)  # 开头偏移0,即开头
         if args.check:
             seq_name = str(file).replace(path+'/', '').replace('.seq', '')
             print('linux')
-        else :
+        else:
             seq_name = str(file).replace(path+'\\', '').replace('.seq', '')
             print('windows')
+        if seq_name.find("("):
+            seq_name = seq_name.split(')')[0].split('(')[1]  # PA3-10
+            seq_name = seq_name.split('-')[1]  # 10
         f.write('>'+seq_name+'\n'+content.strip()+'\n')
         print(seq_name)
     return 0
