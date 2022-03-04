@@ -116,11 +116,11 @@ if args.input:
 
 if args.seq1:
     (seq, abs_dir) = judgment_input_type(args.seq1)
-    print(ir1(seq))
     if args.output:
         file_name = args.output
     else:
         file_name = "s1.fa"
+        print(ir1(seq))
     out_path = os.path.join(abs_dir, file_name)  # 生成绝对路径
     print(out_path)
     output_file = open(out_path, 'w')
