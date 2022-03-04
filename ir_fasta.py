@@ -10,6 +10,7 @@
 # Copyright (C) 2021xxxx genepioneer Corporation
 ##########################################################
 import argparse
+import os
 parser = argparse.ArgumentParser(add_help=False, usage='\npython3   将fa序列反向互补')
 optional = parser.add_argument_group('可选项')
 required = parser.add_argument_group('必选项')
@@ -82,30 +83,53 @@ def readfasta(input_file):  # fa将文件读取为字典及列表
     return seq_dict
 
 
+def judgment_input_type(string):
+    if os.path.isfile(string):
+        abs_path = os.path.abspath(string)
+        abs_dir = os.path.dirname(abs_path)
+        input_file = open(string, 'r')
+        for line in input_file:
+            if len(line.strip('\n')):  # and (not line.startswith('>')):
+                seq = line.strip('\n')
+    else:  # type(string) == type("a"):
+        seq = string
+        abs_dir = os.getcwd()
+    return seq, abs_dir
+
+
 if args.input:
     input_file = open(args.input, 'r')
     seq_dict = readfasta(input_file)
     seq_id = list(seq_dict.keys())[0]
     seq = list(seq_dict.values())[0]
-
     if args.lenth:
         print(len(seq))
-
     ir_seq = ir1(seq)
     # print(len(ir_seq))
-
     if args.output:
         output_file = open(args.output, 'w')
         output_file.write(str(seq_id)+'\n')
         output_file.write(ir_seq+'\n')
         output_file.close()
-
     input_file.close()
-
     print('done')
 
 if args.seq1:
-    print(ir1(args.seq1))
+    (seq, abs_dir) = judgment_input_type(args.seq1)
+    print(ir1(seq))
+    if args.output:
+        file_name = args.output
+    else:
+        file_name = "s1.fa"
+    out_path = os.path.join(abs_dir, file_name)  # 生成绝对路径
+    print(out_path)
+    output_file = open(out_path, 'w')
+    # print(os.path.abspath("s1.fa"))
+    # path = os.path.abspath(out_file)#获得绝对路径
+    # print(os.path.dirname(path))#绝对路径刨去文件名
+    output_file.write(ir1(seq)+'\n')
+    output_file.close()
+
 if args.seq2:
     print(ir2(args.seq2))
 if args.seq3:
