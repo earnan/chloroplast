@@ -2,7 +2,7 @@
 # -*- coding : utf-8 -*-
 ##########################################################
 #
-#       Filename: 编程处理模板.py
+#       Filename: format_txt2fasta_V1.0.py
 #         Author: yuj@genepioneer.cn
 #    Description: sample
 #  Last Modified: 2021-xx-xx 16:29:29
