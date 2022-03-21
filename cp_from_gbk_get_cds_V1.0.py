@@ -22,9 +22,9 @@ parser = argparse.ArgumentParser(
 optional = parser.add_argument_group('可选项')
 required = parser.add_argument_group('必选项')
 optional.add_argument('-i', '--input',
-                      metavar='[dir]', help='输入gbk所在目录', type=str, default="F:/Hibiscus_sabdariffa/111", required=False)
+                      metavar='[dir]', help='输入gbk所在目录', type=str, default="F:/3951答疑/global_align/gbk", required=False)
 optional.add_argument('-o', '--output',
-                      metavar='[dir]', help='输出的路径', type=str, default="F:/Hibiscus_sabdariffa/out", required=False)
+                      metavar='[dir]', help='输出的路径', type=str, default="F:/3951答疑/global_align/out", required=False)
 optional.add_argument('-h', '--help', action='help', help='[帮助信息]')
 args = parser.parse_args()
 
@@ -122,7 +122,7 @@ if __name__ == '__main__':
 
     # print(count_dict)
     # out_log_file_obj.write(str(count_dict))
-    print(missing_gene_dict)
+    # print(missing_gene_dict)
     out_log_file_obj.write(str(missing_gene_dict))
     out_cds_file_path_obj.close()
     out_complete_file_obj.close()
