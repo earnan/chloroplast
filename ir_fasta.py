@@ -2,15 +2,25 @@
 # -*- coding : utf-8 -*-
 ##########################################################
 #
-#       Filename: 编程处理模板.py
-#         Author: yuj@genepioneer.cn
-#    Description: sample
-#  Last Modified: 2021-xx-xx 16:29:29
+#       Filename:   ir_fasta.py
+#         Author:   yujie
+#    Description:   ir_fasta.py
+#        Version:   1.0
+#           Time:   2022/04/18 17:22:12
+#  Last Modified:   2022/04/18 17:22:12
+#        Contact:   hi@arcsona.cn
+#        License:   Copyright (C) 2022
 #
-# Copyright (C) 2021xxxx genepioneer Corporation
 ##########################################################
+from Bio import SeqIO
+from Bio.Seq import Seq
+from icecream import ic
 import argparse
+import linecache
 import os
+import re
+import time
+
 parser = argparse.ArgumentParser(add_help=False, usage='\npython3   将fa序列反向互补')
 optional = parser.add_argument_group('可选项')
 required = parser.add_argument_group('必选项')
