@@ -17,7 +17,7 @@ required = parser.add_argument_group('必选项')
 optional.add_argument('-i', '--input',
                       metavar='[xxx.fasta]', help='输入fa文件', type=str, required=False)
 optional.add_argument(
-    '-l', '--lenth', metavar='[基因序列长度]', type=bool, help="有输入文件即可", default='1', required=False)
+    '-l', '--lenth', metavar='[基因序列长度]', type=bool, help="有-i 参数即可输出", default='1', required=False)
 
 
 optional.add_argument('-s1', '--seq1',
