@@ -129,8 +129,6 @@ if __name__ == '__main__':
     print('Start Time : {}'.format(start_time))
     #################################################################
     """
-    #pos_list = ['1-5:-1', '10-15:-1', '17-20:-1']
-    #seq = 'ATGCG'+'TCCGT'+'ACTTG'+'GCAGC'+'TTCAA'+'AGCTG'+'CTAGC'
     seq = read_file(args.infasta)
     pos_list = format_pos(args.posstr)
     # ic(pos_list)
