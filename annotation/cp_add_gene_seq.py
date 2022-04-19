@@ -134,6 +134,7 @@ if __name__ == '__main__':
     # ic(pos_list)
     cds_seq = merge_sequence(pos_list, seq)
     print(cds_seq)
+    print('\n')
     if args.flag1:
         coding_dna = Seq(cds_seq)
         print(coding_dna.translate(table=11))
