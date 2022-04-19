@@ -151,6 +151,7 @@ if __name__ == '__main__':
                 if not acid.endswith('*'):
                     print('#####interior is wrong!')
                 else:
+                    print(args.posstr)
                     print('-----ok')
     """
     ###############################################################
