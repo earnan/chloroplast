@@ -32,18 +32,12 @@ optional.add_argument(
     '-i', '--infasta', metavar='[infasta]', help='infasta', type=str, default='F:/1.fa', required=False)
 optional.add_argument(
     '-p', '--posstr', metavar='[pos_str]', help='pos_str', type=str, default='1-5:-;10-15:-;17-20:-', required=False)
-optional.add_argument('-c1', '--flag1', help='run step 1?默认是,不运行则-c1',
+optional.add_argument('-c1', '--flag1', help='翻译?默认是,不运行则-c1',
                       action='store_false', required=False)
 optional.add_argument('-c2', '--flag2', help='run step 2?默认否,运行则-c2 ',
                       action='store_true', required=False)
 optional.add_argument('-h', '--help', action='help', help='[帮助信息]')
 args = parser.parse_args()
-
-# TODO 显示终止密码子所在的位置
-
-# TODO 可以取出分段的序列合并后翻译成蛋白质
-
-# TODO
 
 
 def read_file(infasta):  # 读取文件
@@ -104,6 +98,28 @@ def merge_sequence(pos_list, seq):  # 合并获取到的序列
     return cds_seq
 
 
+"""
+def trans2acid(codon):  # 翻译成氨基酸
+    """"""
+    The Bacterial and Plant Plastid Code (11):
+    Stnd    AAs = FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG
+    This    AAs = FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG
+    Starts      = ---M---------------M------------MMMM---------------M------------
+    Base1       = TTTTTTTTTTTTTTTTCCCCCCCCCCCCCCCCAAAAAAAAAAAAAAAAGGGGGGGGGGGGGGGG
+    Base2       = TTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGGTTTTCCCCAAAAGGGG
+    Base3       = TCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAGTCAG
+    """"""
+    genetic_code_number = 11
+    acid = ''
+    code_table = {'TTT': 'F', 'TTC': 'F', 'TTA': 'L', 'TTG': 'L', 'TCT': 'S', 'TCC': 'S', 'TCA': 'S', 'TCG': 'S', 'TAT': 'Y', 'TAC': 'Y', 'TAA': '*', 'TAG': '*', 'TGT': 'C', 'TGC': 'C', 'TGA': '*', 'TGG': 'W',
+                  'CTT': 'L', 'CTC': 'L', 'CTA': 'L', 'CTG': 'L', 'CCT': 'P', 'CCC': 'P', 'CCA': 'P', 'CCG': 'P', 'CAT': 'H', 'CAC': 'H', 'CAA': 'Q', 'CAG': 'Q', 'CGT': 'R', 'CGC': 'R', 'CGA': 'R', 'CGG': 'R',
+                  'ATT': 'I', 'ATC': 'I', 'ATA': 'I', 'ATG': 'M', 'ACT': 'T', 'ACC': 'T', 'ACA': 'T', 'ACG': 'T', 'AAT': 'N', 'AAC': 'N', 'AAA': 'K', 'AAG': 'K', 'AGT': 'S', 'AGC': 'S', 'AGA': 'R', 'AGG': 'R',
+                  'GTT': 'V', 'GTC': 'V', 'GTA': 'V', 'GTG': 'V', 'GCT': 'A', 'GCC': 'A', 'GCA': 'A', 'GCG': 'A', 'GAT': 'D', 'GAC': 'D', 'GAA': 'E', 'GAG': 'E', 'GGT': 'G', 'GGC': 'G', 'GGA': 'G', 'GGG': 'G', }
+    acid = code_table[codon]
+    return acid
+"""
+
+
 if __name__ == '__main__':
     """
     #################################################################
@@ -120,6 +136,9 @@ if __name__ == '__main__':
     # ic(pos_list)
     cds_seq = merge_sequence(pos_list, seq)
     print(cds_seq)
+    if args.flag1:
+        coding_dna = Seq(cds_seq)
+        print(coding_dna.translate(table=11))
     """
     ###############################################################
     end_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
