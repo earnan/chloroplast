@@ -129,6 +129,7 @@ if __name__ == '__main__':
     print('Start Time : {}'.format(start_time))
     #################################################################
     """
+    start_code_table = ['TTG', 'CTG', 'ATT', 'ATC', 'ATA', 'ATG', 'GTG']
     seq = read_file(args.infasta)
     pos_list = format_pos(args.posstr)
     # ic(pos_list)
@@ -137,7 +138,20 @@ if __name__ == '__main__':
     print('\n')
     if args.flag1:
         coding_dna = Seq(cds_seq)
-        print(coding_dna.translate(table=11))
+        acid = coding_dna.translate(table=11)
+        print(acid+'\n')
+        if not cds_seq[0:3] in start_code_table:
+            print('#####start is wrong!')
+        else:
+            if acid.count('*') > 1:
+                print('#####interior is wrong!')
+            elif acid.count('*') < 1:
+                print('#####end is wrong!')
+            else:
+                if not acid.endswith('*'):
+                    print('#####interior is wrong!')
+                else:
+                    print('-----ok')
     """
     ###############################################################
     end_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
