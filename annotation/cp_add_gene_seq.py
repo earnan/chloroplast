@@ -31,11 +31,11 @@ required = parser.add_argument_group('必选项')
 optional.add_argument(
     '-i', '--infasta', metavar='[infasta]', help='输入fasta文件', type=str, default='F:/Epipactis_helleborine_FULLCP.fsa', required=False)
 optional.add_argument(
-    '-p', '--posstr', metavar='[pos_str]', help="输入位置,形如'124353-124892:-;126001-126552:-'", type=str, default='124353-124892:-;126001-126552:-', required=False)
+    '-p', '--posstr', metavar='[pos_str]', help="输入位置,形如'124353-124892:-;126001-126552:-'", type=str, required=False)
 # 124842-124892:-;126001-126552:-', required=False)
 # 124353-124892:-;126001-126552:-', required=False)
 optional.add_argument(
-    '-m', '--maxnumber', metavar='[max_number]', help='最大递归查找次数', type=int, default=1, required=False)
+    '-m', '--maxnumber', metavar='[max_number]', help='最大递归查找次数', type=int, default=0, required=False)
 optional.add_argument('-f1', '--flag1', help='翻译?默认是,不运行则-c1',
                       action='store_false', required=False)
 optional.add_argument('-h', '--help', action='help', help='[帮助信息]')
@@ -144,8 +144,8 @@ def trans2acid(cds_seq):  # 翻译成氨基酸,返回是否正确以及第一个
 # 如果内部有终止子,则开始尝试返回新的基因位置
 
 def get_new_pos(tmp_pos_list, inter_number):
-    # pos_list = ['124353-124892:-', '126001-126552:-']  # 原位置
-    # tmp_pos_list = ['126001-126552:-1', '124353-124892:-1']  # 排序后位置
+    # pos_list = []  # 原位置
+    # tmp_pos_list = []  # 排序后位置
     # inter_number = 200  # 包括第一个终止子在内的前面所有氨基酸数
     inter_pos = 3*inter_number  # 包括第一个终止子在内的前面所有碱基数
 
