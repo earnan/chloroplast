@@ -14,7 +14,7 @@
 ##########################################################
 from Bio import SeqIO
 from Bio.Seq import Seq
-# from icecream import ic
+#from icecream import ic
 import argparse
 import linecache
 import os
@@ -29,9 +29,13 @@ V1.0')
 optional = parser.add_argument_group('可选项')
 required = parser.add_argument_group('必选项')
 optional.add_argument(
-    '-i', '--infasta', metavar='[infasta]', help='infasta', type=str, default='F:/1.fa', required=False)
+    '-i', '--infasta', metavar='[infasta]', help='infasta', type=str, default='F:/Epipactis_helleborine_FULLCP.fsa', required=False)
 optional.add_argument(
-    '-p', '--posstr', metavar='[pos_str]', help='pos_str', type=str, default='1-5:-;10-15:-;17-20:-', required=False)
+    '-p', '--posstr', metavar='[pos_str]', help='pos_str', type=str, default='124353-124892:-;126001-126552:-', required=False)
+# 124842-124892:-;126001-126552:-', required=False)
+# 124353-124892:-;126001-126552:-', required=False)
+optional.add_argument(
+    '-m', '--maxnumber', metavar='[max_number]', help='max_number', type=int, default=10, required=False)
 optional.add_argument('-c1', '--flag1', help='翻译?默认是,不运行则-c1',
                       action='store_false', required=False)
 optional.add_argument('-c2', '--flag2', help='run step 2?默认否,运行则-c2 ',
@@ -77,26 +81,145 @@ def ir(s):  # 反向互补
     return c
 
 
-def merge_sequence(pos_list, seq):  # 合并获取到的序列
+def merge_sequence(pos_list, seq):  # 合并获取到的序列,顺便排一下位置顺序
+    cds_seq = ""
     if int(pos_list[0].split(':')[-1]) == -1:
         pos_list = pos_list[::-1]
-    cds_seq = ""
+
     for ele in pos_list:  # ele 1-10:-1
         strand = int(ele.split(':')[-1])
-        start = int(ele.split(':')[0].split('-')[0])-1  # -1后变成索引
+        start = int(ele.split(':')[0].split('-')[0])
         end = int(ele.split(':')[0].split('-')[-1])
+        start_index = start-1
+        end_index = end
         if strand == (-1):
             # ic('minus')
-            # 切片,索引从start-1到end-1,也就是对应start到end的序列
-            # a[1:6] 取的是 索引1 索引2 索引3 索引4 索引5,也就是 第2个 一直到第6个数
-            cds_seq += ir(seq[start:end])
+            # seq[start_index:end_index] 角标从start_index到end_index    取的是索引start-1一直到end  取的是start一直到end的碱基
+            cds_seq += ir(seq[start_index:end_index])
             # ic(cds_seq)
         elif strand == (1):
             # ic('plus')
-            cds_seq += seq[start:end]
+            cds_seq += seq[start_index:end_index]
             # ic(cds_seq)
-    return cds_seq
+    return cds_seq, pos_list
 
+#######################################################################################################################
+
+
+def trans2acid(cds_seq):  # 翻译成氨基酸,返回是否正确以及第一个终止子在基因序列上的相对位置
+    start_code_table = ['TTG', 'CTG', 'ATT', 'ATC', 'ATA', 'ATG', 'GTG']
+    tmp_flag = False
+    inter_number = 0
+    if len(cds_seq) % 3 == 1:
+        print('len(sequence) not a multiple of three! {}=3n+1'.format(len(cds_seq)))
+    elif len(cds_seq) % 3 == 2:
+        print('len(sequence) not a multiple of three! {}=3n+2'.format(len(cds_seq)))
+
+    coding_dna = Seq(cds_seq)
+    acid = coding_dna.translate(table=11)
+    print(acid)
+
+    if not cds_seq[0:3] in start_code_table:
+        print('#####start is wrong!')
+    else:
+        if acid.count('*') > 1:
+            print('#####interior is wrong!')
+            inter_number = acid.find('*')
+            print(inter_number)
+            print('\n')
+        elif acid.count('*') < 1:
+            print('#####end is wrong!')
+        else:
+            if not acid.endswith('*'):
+                print('#####interior is wrong!')
+                inter_number = acid.find('*')
+                print(inter_number)
+                print('\n')
+            else:
+                tmp_flag = True
+                print('-----ok')
+    return tmp_flag, inter_number
+
+
+###################################################################################################################
+# 如果内部有终止子,则开始尝试返回新的基因位置
+pos_list = ['124353-124892:-', '126001-126552:-']
+tmp_pos_list = ['126001-126552:-1', '124353-124892:-1']
+list = [126552-126001, 124892-124353]
+#list = ['552:-1', '540:-1']
+# 552   540
+inter_number = 200
+inter_pos = 600
+inter = 492
+
+strand_list = []
+lenth_list = []
+for ele in tmp_pos_list:  # ele 1-10:-1
+    strand = int(ele.split(':')[-1])
+    start = int(ele.split(':')[0].split('-')[0])
+    end = int(ele.split(':')[0].split('-')[-1])
+    lenth = end-start+1
+    lenth_list.append(lenth)
+    strand_list.append(strand)
+
+if inter <= lenth_list[-1]:
+    print('位于{}'.format(tmp_pos_list[-1]))
+    # 126552-(200-1) 最后一个碱基位置
+    new_pos = inter + int(tmp_pos_list[-1].split('-')[0])-3
+    print(new_pos)
+    print('\n')
+elif inter_pos <= lenth_list[0]+lenth_list[1]:
+    new_pos = 124845  # 124892-(600-552-1)最后一个碱基位置
+    # 124842
+#'126001-126552:-1', '124842-124892:-1'
+
+#################################################################################################################
+# 循环查找
+
+
+def loop_look(infasta, posstr, flag1, n, maxnumber):
+    seq = read_file(infasta)
+    pos_list = format_pos(posstr)
+    cds_seq, tmp_pos_list = merge_sequence(pos_list, seq)
+    print(cds_seq)
+    print('------------------------------------------------------------')
+
+    if flag1:
+        tmp_flag, inter_number = trans2acid(cds_seq)
+        if tmp_flag == True:
+            new_posstr = posstr
+            print(new_posstr)
+        elif tmp_flag == False:
+            n += 1
+            print('第{}次查找中'.format(n))
+            new_posstr = '124353-124892:-;126001-126552:-'
+
+            if n <= maxnumber:
+                loop_look(infasta, new_posstr, flag1, n, maxnumber)
+            else:
+                print('{}次查找未有结果,取消第{}次查找'.format(n-1, n))
+    return 0
+
+
+if __name__ == '__main__':
+    """
+    #################################################################
+    # 格式化成2016-03-20 11: 45: 39形式
+    begin_time = time.time()
+    start_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+    print('Start Time : {}'.format(start_time))
+    #################################################################
+    """
+    n = 0  # 控制递归次数,在loop_look函数外部定义全局变量
+    loop_look(args.infasta, args.posstr, args.flag1, n, args.maxnumber)
+    """
+    ###############################################################
+    end_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+    print('End Time : {}'.format(end_time))
+    print('Already Run {}s'.format(time.time()-begin_time))
+    print('Done')
+    ###############################################################
+    """
 
 """
 def trans2acid(codon):  # 翻译成氨基酸
@@ -118,50 +241,3 @@ def trans2acid(codon):  # 翻译成氨基酸
     acid = code_table[codon]
     return acid
 """
-
-
-def trans2acid(cds_seq):
-    start_code_table = ['TTG', 'CTG', 'ATT', 'ATC', 'ATA', 'ATG', 'GTG']
-    coding_dna = Seq(cds_seq)
-    acid = coding_dna.translate(table=11)
-    print(acid+'\n')
-    if not cds_seq[0:3] in start_code_table:
-        print('#####start is wrong!')
-    else:
-        if acid.count('*') > 1:
-            print('#####interior is wrong!')
-        elif acid.count('*') < 1:
-            print('#####end is wrong!')
-        else:
-            if not acid.endswith('*'):
-                print('#####interior is wrong!')
-            else:
-                print(args.posstr)
-                print('-----ok')
-
-
-if __name__ == '__main__':
-    """
-    #################################################################
-    # 格式化成2016-03-20 11: 45: 39形式
-    begin_time = time.time()
-    start_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-    print('Start Time : {}'.format(start_time))
-    #################################################################
-    """
-    seq = read_file(args.infasta)
-    pos_list = format_pos(args.posstr)
-    # ic(pos_list)
-    cds_seq = merge_sequence(pos_list, seq)
-    print(cds_seq)
-    print('\n')
-    if args.flag1:
-        trans2acid(cds_seq)
-    """
-    ###############################################################
-    end_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-    print('End Time : {}'.format(end_time))
-    print('Already Run {}s'.format(time.time()-begin_time))
-    print('Done')
-    ###############################################################
-    """
