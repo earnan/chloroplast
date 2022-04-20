@@ -14,7 +14,7 @@
 ##########################################################
 from Bio import SeqIO
 from Bio.Seq import Seq
-#from icecream import ic
+# from icecream import ic
 import argparse
 import linecache
 import os
@@ -120,6 +120,26 @@ def trans2acid(codon):  # 翻译成氨基酸
 """
 
 
+def trans2acid(cds_seq):
+    start_code_table = ['TTG', 'CTG', 'ATT', 'ATC', 'ATA', 'ATG', 'GTG']
+    coding_dna = Seq(cds_seq)
+    acid = coding_dna.translate(table=11)
+    print(acid+'\n')
+    if not cds_seq[0:3] in start_code_table:
+        print('#####start is wrong!')
+    else:
+        if acid.count('*') > 1:
+            print('#####interior is wrong!')
+        elif acid.count('*') < 1:
+            print('#####end is wrong!')
+        else:
+            if not acid.endswith('*'):
+                print('#####interior is wrong!')
+            else:
+                print(args.posstr)
+                print('-----ok')
+
+
 if __name__ == '__main__':
     """
     #################################################################
@@ -129,7 +149,6 @@ if __name__ == '__main__':
     print('Start Time : {}'.format(start_time))
     #################################################################
     """
-    start_code_table = ['TTG', 'CTG', 'ATT', 'ATC', 'ATA', 'ATG', 'GTG']
     seq = read_file(args.infasta)
     pos_list = format_pos(args.posstr)
     # ic(pos_list)
@@ -137,22 +156,7 @@ if __name__ == '__main__':
     print(cds_seq)
     print('\n')
     if args.flag1:
-        coding_dna = Seq(cds_seq)
-        acid = coding_dna.translate(table=11)
-        print(acid+'\n')
-        if not cds_seq[0:3] in start_code_table:
-            print('#####start is wrong!')
-        else:
-            if acid.count('*') > 1:
-                print('#####interior is wrong!')
-            elif acid.count('*') < 1:
-                print('#####end is wrong!')
-            else:
-                if not acid.endswith('*'):
-                    print('#####interior is wrong!')
-                else:
-                    print(args.posstr)
-                    print('-----ok')
+        trans2acid(cds_seq)
     """
     ###############################################################
     end_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
