@@ -117,6 +117,7 @@ def trans2acid(cds_seq):  # 翻译成氨基酸,返回是否正确以及第一个
 
     coding_dna = Seq(cds_seq)
     acid = coding_dna.translate(table=11)
+    print('------------------------------------------------------------')
     print(acid)
 
     if not cds_seq[0:3] in start_code_table:
@@ -182,7 +183,6 @@ def loop_look(infasta, posstr, flag1, n, maxnumber):
     pos_list = format_pos(posstr)
     cds_seq, tmp_pos_list = merge_sequence(pos_list, seq)
     print(cds_seq)
-    print('------------------------------------------------------------')
 
     if flag1:
         tmp_flag, inter_number = trans2acid(cds_seq)
