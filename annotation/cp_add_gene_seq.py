@@ -35,7 +35,7 @@ optional.add_argument(
 # 124842-124892:-;126001-126552:-', required=False)
 # 124353-124892:-;126001-126552:-', required=False)
 optional.add_argument(
-    '-m', '--maxnumber', metavar='[max_number]', help='max_number', type=int, default=10, required=False)
+    '-m', '--maxnumber', metavar='[max_number]', help='max_number', type=int, default=5, required=False)
 optional.add_argument('-c1', '--flag1', help='翻译?默认是,不运行则-c1',
                       action='store_false', required=False)
 optional.add_argument('-c2', '--flag2', help='run step 2?默认否,运行则-c2 ',
