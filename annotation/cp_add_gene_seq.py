@@ -29,17 +29,15 @@ V1.0')
 optional = parser.add_argument_group('可选项')
 required = parser.add_argument_group('必选项')
 optional.add_argument(
-    '-i', '--infasta', metavar='[infasta]', help='infasta', type=str, default='F:/Epipactis_helleborine_FULLCP.fsa', required=False)
+    '-i', '--infasta', metavar='[infasta]', help='输入fasta文件', type=str, default='F:/Epipactis_helleborine_FULLCP.fsa', required=False)
 optional.add_argument(
-    '-p', '--posstr', metavar='[pos_str]', help='pos_str', type=str, default='124353-124892:-;126001-126552:-', required=False)
+    '-p', '--posstr', metavar='[pos_str]', help="输入位置,形如'124353-124892:-;126001-126552:-'", type=str, default='124353-124892:-;126001-126552:-', required=False)
 # 124842-124892:-;126001-126552:-', required=False)
 # 124353-124892:-;126001-126552:-', required=False)
 optional.add_argument(
-    '-m', '--maxnumber', metavar='[max_number]', help='max_number', type=int, default=5, required=False)
-optional.add_argument('-c1', '--flag1', help='翻译?默认是,不运行则-c1',
+    '-m', '--maxnumber', metavar='[max_number]', help='最大递归查找次数', type=int, default=5, required=False)
+optional.add_argument('-f1', '--flag1', help='翻译?默认是,不运行则-c1',
                       action='store_false', required=False)
-optional.add_argument('-c2', '--flag2', help='run step 2?默认否,运行则-c2 ',
-                      action='store_true', required=False)
 optional.add_argument('-h', '--help', action='help', help='[帮助信息]')
 args = parser.parse_args()
 
