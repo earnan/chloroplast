@@ -35,7 +35,7 @@ optional.add_argument(
 # 124842-124892:-;126001-126552:-', required=False)
 # 124353-124892:-;126001-126552:-', required=False)
 optional.add_argument(
-    '-m', '--maxnumber', metavar='[max_number]', help='最大递归查找次数', type=int, default=5, required=False)
+    '-m', '--maxnumber', metavar='[max_number]', help='最大递归查找次数', type=int, default=1, required=False)
 optional.add_argument('-f1', '--flag1', help='翻译?默认是,不运行则-c1',
                       action='store_false', required=False)
 optional.add_argument('-h', '--help', action='help', help='[帮助信息]')
@@ -142,35 +142,41 @@ def trans2acid(cds_seq):  # 翻译成氨基酸,返回是否正确以及第一个
 
 ###################################################################################################################
 # 如果内部有终止子,则开始尝试返回新的基因位置
-pos_list = ['124353-124892:-', '126001-126552:-']
-tmp_pos_list = ['126001-126552:-1', '124353-124892:-1']
-list = [126552-126001, 124892-124353]
-#list = ['552:-1', '540:-1']
-# 552   540
-inter_number = 200
-inter_pos = 600
-inter = 492
 
-strand_list = []
-lenth_list = []
-for ele in tmp_pos_list:  # ele 1-10:-1
-    strand = int(ele.split(':')[-1])
-    start = int(ele.split(':')[0].split('-')[0])
-    end = int(ele.split(':')[0].split('-')[-1])
-    lenth = end-start+1
-    lenth_list.append(lenth)
-    strand_list.append(strand)
+def get_new_pos(tmp_pos_list, inter_number):
+    # pos_list = ['124353-124892:-', '126001-126552:-']  # 原位置
+    # tmp_pos_list = ['126001-126552:-1', '124353-124892:-1']  # 排序后位置
+    # inter_number = 200  # 包括第一个终止子在内的前面所有氨基酸数
+    inter_pos = 3*inter_number  # 包括第一个终止子在内的前面所有碱基数
 
-if inter <= lenth_list[-1]:
-    print('位于{}'.format(tmp_pos_list[-1]))
-    # 126552-(200-1) 最后一个碱基位置
-    new_pos = inter + int(tmp_pos_list[-1].split('-')[0])-3
-    print(new_pos)
-    print('\n')
-elif inter_pos <= lenth_list[0]+lenth_list[1]:
-    new_pos = 124845  # 124892-(600-552-1)最后一个碱基位置
-    # 124842
-#'126001-126552:-1', '124842-124892:-1'
+    strand_list = []
+    lenth_list = []
+    for ele in tmp_pos_list:  # ele 1-10:-1
+        strand = int(ele.split(':')[-1])
+        start = int(ele.split(':')[0].split('-')[0])
+        end = int(ele.split(':')[0].split('-')[-1])
+        lenth = end-start+1
+        lenth_list.append(lenth)
+        strand_list.append(strand)
+
+    print(lenth_list)
+    print(strand_list)
+    lenth_sum = 0
+    for i in lenth_list:
+        lenth_sum += i
+    inter = lenth_sum-inter_pos  # 剩余的碱基数
+    # ic(inter)
+
+    if inter <= lenth_list[-1]:
+        print('lie in [{}]'.format(tmp_pos_list[-1]))
+        # 126552-(200-1) 最后一个碱基位置
+        new_pos = inter + int(tmp_pos_list[-1].split('-')[0])-3
+        print(new_pos)
+        print('\n')
+    elif inter_pos <= lenth_list[0]+lenth_list[1]:
+        new_pos = 124845  # 124892-(600-552-1)最后一个碱基位置
+    return 0
+
 
 #################################################################################################################
 # 循环查找
@@ -196,7 +202,7 @@ def loop_look(infasta, posstr, flag1, n, maxnumber):
                 loop_look(infasta, new_posstr, flag1, n, maxnumber)
             else:
                 print('{}次查找未有结果,取消第{}次查找'.format(n-1, n))
-    return 0
+    return tmp_pos_list, inter_number
 
 
 if __name__ == '__main__':
@@ -208,8 +214,11 @@ if __name__ == '__main__':
     print('Start Time : {}'.format(start_time))
     #################################################################
     """
+
     n = 0  # 控制递归次数,在loop_look函数外部定义全局变量
-    loop_look(args.infasta, args.posstr, args.flag1, n, args.maxnumber)
+    tmp_pos_list, inter_number = loop_look(
+        args.infasta, args.posstr, args.flag1, n, args.maxnumber)
+    get_new_pos(tmp_pos_list, inter_number)
     """
     ###############################################################
     end_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
