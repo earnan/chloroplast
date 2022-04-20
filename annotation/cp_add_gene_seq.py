@@ -214,7 +214,6 @@ if __name__ == '__main__':
     print('Start Time : {}'.format(start_time))
     #################################################################
     """
-
     n = 0  # 控制递归次数,在loop_look函数外部定义全局变量
     tmp_pos_list, inter_number = loop_look(
         args.infasta, args.posstr, args.flag1, n, args.maxnumber)
