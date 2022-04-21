@@ -31,7 +31,7 @@ required = parser.add_argument_group('必选项')
 optional.add_argument(
     '-i', '--infasta', metavar='[infasta]', help='输入fasta文件', type=str, default='F:/Epipactis_helleborine_FULLCP.fsa', required=False)
 optional.add_argument(
-    '-p', '--posstr', metavar='[pos_str]', help="输入位置,形如'124353-124892:-;126001-126552:-'", type=str, required=False)
+    '-p', '--posstr', metavar='[pos_str]', help="输入位置,形如'124353-124892:-;126001-126552:-'", type=str, default='68847-69098:-;69781-70072:-;71079-71149:-', required=False)
 # 124842-124892:-;126001-126552:-', required=False)
 # 124353-124892:-;126001-126552:-', required=False)
 optional.add_argument(
