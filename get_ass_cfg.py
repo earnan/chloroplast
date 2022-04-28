@@ -2,13 +2,17 @@
 # -*- coding : utf-8 -*-
 ##########################################################
 #
-#       Filename: 编程处理模板.py
-#         Author: yuj@genepioneer.cn
-#    Description: sample
-#  Last Modified: 2021-xx-xx 16:29:29
+#       Filename:   get_ass_cfg.py
+#         Author:   yujie
+#    Description:   get_ass_cfg.py
+#        Version:   1.0
+#           Time:   2022/04/28 16:20:22
+#  Last Modified:   2022/04/28 16:20:22
+#        Contact:   hi@arcsona.cn
+#        License:   Copyright (C) 2022
 #
-# Copyright (C) 2021xxxx genepioneer Corporation
 ##########################################################
+
 import os
 import argparse
 parser = argparse.ArgumentParser(
@@ -46,7 +50,7 @@ def find(path):
 print('手动输入的路径是{0}'.format(args.input))
 file_list = []
 dir_list = []
-out_file = open(args.output, 'w')
+out_file = open(args.output, 'a+')
 out_file.write('Samples:' + '\n')  # 输出文件的第一行格式
 find(args.input)
 
