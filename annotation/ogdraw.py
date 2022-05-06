@@ -14,7 +14,7 @@
 ##########################################################
 from Bio import SeqIO
 from Bio.Seq import Seq
-from icecream import ic
+#from icecream import ic
 import argparse
 import linecache
 import os
@@ -42,7 +42,6 @@ optional.add_argument('-c2', '--flag2', help='run step 2?默认否,运行则-c2 
                       action='store_true', required=False)
 optional.add_argument('-h', '--help', action='help', help='[帮助信息]')
 args = parser.parse_args()
-
 
 drawgenemap = "/share/nas6/pub/pipline/genome-assembly-seq/chloroplast-genome-seq/v1.2/annotation/etc/plot_ogdraw_cpgenome_genbank/etc/GeneMap-1.1.1/bin/drawgenemap"
 plastid_conf = "/share/nas6/pub/pipline/genome-assembly-seq/chloroplast-genome-seq/v1.2/annotation/etc/plot_ogdraw_cpgenome_genbank/conf/OGDraw_plastid_set.xml"
