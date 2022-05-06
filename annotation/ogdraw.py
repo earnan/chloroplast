@@ -29,9 +29,9 @@ V1.0')
 optional = parser.add_argument_group('可选项')
 required = parser.add_argument_group('必选项')
 optional.add_argument(
-    '-i', '--infile', metavar='[infile]', help='infile', type=str,  required=False)
+    '-i', '--infile', metavar='[infile]', help='gbk文件', type=str,  required=False)
 optional.add_argument(
-    '-ir', '--irregion', metavar='[irregion]', help='irregion', type=str,  required=False)
+    '-ir', '--irregion', metavar='[irregion]', help="形如'80005-101556,114348-135899'", type=str,  required=False)
 optional.add_argument(
     '-p', '--prefix', metavar='[prefix]', help='prefix', type=str,  required=False)
 optional.add_argument(
