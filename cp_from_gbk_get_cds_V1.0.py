@@ -87,7 +87,7 @@ def merge_sequence(ele, complete_seq):  # 合并获取到的序列
 def get_complete_note(seq_record):  # 获取整个完整基因组ID
     seq_id = ''
     # if seq_record.description.find('chloroplast'):#有bug
-    if seq_record.description.split(',')[-2].split()[-1] == 'chloroplast':
+    if seq_record.description.split(',')[-2].split()[-1] == 'chloroplast' or seq_record.description.split(',')[-2].split()[-1] == 'plastid':
         seq_id = seq_record.description.split(
             'chloroplast')[0].replace(' ', '_').rstrip('_')
         name = seq_record.name
@@ -106,7 +106,8 @@ def get_complete_note(seq_record):  # 获取整个完整基因组ID
             seq_id = seq_id+'_'+name
         complete_note = ">" + seq_id + "\n"  # mitochondrion--线粒体
     else:
-        print('WARNING')
+        print('WARNING! {}!'.format(
+            seq_record.description.split(', ')[-2].split()[-1]))
         complete_note = ">" + (seq_record.description.split('chloroplast')
                                [0]).replace(' ', '_').rstrip('_') + "\n"
     return complete_note, seq_id
