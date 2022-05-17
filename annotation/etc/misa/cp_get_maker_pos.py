@@ -30,11 +30,12 @@ V1.0')
 optional = parser.add_argument_group('可选项')
 required = parser.add_argument_group('必选项')
 optional.add_argument('-1', '--indir', metavar='[dir]', help='all fa',
-                      type=str, default='F:/4286', required=False)
+                      type=str, default='F:/4286/archive', required=False)
 optional.add_argument('-2', '--infile', metavar='[.maker]', help='maker',
-                      type=str, default='F:/4286/ssr20220509.xls', required=False)
+                      type=str, default='F:/4286/archive/ssr.xls', required=False)
+optional.add_argument('-i',  '--innum', type=int, default=0, required=False)
 optional.add_argument(
-    '-o', '--outdir', metavar='[outdir]', help='outdir', type=str, default='F:/4286', required=False)
+    '-o', '--outdir', metavar='[outdir]', help='outdir', type=str, default='F:/4286/archive', required=False)
 optional.add_argument('-c1', '--flag1', help='run step 1?默认是,不运行则-c1',
                       action='store_false', required=False)
 optional.add_argument('-c2', '--flag2', help='run step 2?默认否,运行则-c2 ',
@@ -149,7 +150,7 @@ def write_p3in(dict_all_pos_list, list_species, outdir):
 
     for i in range(len(list_species)):
         outfile = outdir+'/'+list_species[i]+'.ssr.p3in'
-        ic(outfile)
+        # ic(outfile)
         with open(outfile, 'wb') as f:
             n = 1
             for j in dict_all_pos_list[fa_list[i]]:
@@ -163,12 +164,34 @@ def write_p3in(dict_all_pos_list, list_species, outdir):
                 f.write('=\n'.encode())
                 n += 1
 
-            print('done')
+            # print('done')
         #createvar['seq'+str(i+1)] = dict_seq[list_species[i]]
     return fa_list
 
 
+def write_misa(dict_all_pos_list, list_species, outdir):
+    fa_dict = {}
+    fa_list = []
+    for i in dict_all_pos_list.keys():
+        fa_dict[i.split(':')[0]] = i.split(':')[1]
+        fa_list.append(i)
+
+    for i in range(len(list_species)):
+        outfile = outdir+'/'+list_species[i]+'.misa.xls'
+        # ic(outfile)
+        with open(outfile, 'wb') as f:
+            for j in dict_all_pos_list[fa_list[i]]:
+                f.write('{}\t{}\t{}\n'.format(
+                    list_species[i], j[0], j[0]+j[1]-1).encode())
+    return 0
+
+
 dict_all_pos_list, list_species = get_maker_in_fa_pos(args.indir, args.infile)
 fa_list = write_p3in(dict_all_pos_list, list_species, args.outdir)
-for i in dict_all_pos_list[fa_list[0]]:
-    print(i[0])
+write_misa(dict_all_pos_list, list_species, args.outdir)
+# with open('F:/4286/allpos.xls', 'w') as f:
+# for i in range(len(fa_list)):
+i = args.innum
+print(fa_list[i].split(':')[0])
+for j in dict_all_pos_list[fa_list[i]]:
+    print(j[0])
