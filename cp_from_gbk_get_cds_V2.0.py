@@ -111,28 +111,33 @@ def get_complete_note(seq_record):  # 获取整个完整基因组ID
 
 
 def get_cds_note(ele, complete_seq, seq_id, tmp_gene_name):  # 获取cds的id及序列
-    # tmp_gene_name = ''  # 上一个有名字的cds
+
     if 'gene' not in ele.qualifiers.keys():
-        print(tmp_gene_name)  # 返回上一个基因,好从其他参考找这个没名字的
+        # 返回上一个基因,好从其他参考找这个没名字的
+        tmp_gene_name = input(
+            "\nPrevious: {0}. Current: {1}.\nPlease input current gene name:".format(tmp_gene_name, ele.location.parts))
+    else:
+        tmp_gene_name = ele.qualifiers['gene'][0]
+
     if len(ele.location.parts) == 3:
         tmp_list, cds_seq = merge_sequence(ele, complete_seq)
         cds_note = ">" + seq_id + " [" + tmp_list[0]+".." + tmp_list[1]+';' + tmp_list[2]+".." + tmp_list[3]+';' + \
             tmp_list[4]+".." + tmp_list[5]+"]" + " [gene=" + \
-            ele.qualifiers['gene'][0] + "]" + "\n"  # '>'后的格式和已有脚本兼容
+            tmp_gene_name + "]" + "\n"  # '>'后的格式和已有脚本兼容
         tmp_gene_name = ele.qualifiers['gene'][0]
+
     elif len(ele.location.parts) == 2:
         tmp_list, cds_seq = merge_sequence(ele, complete_seq)
         cds_note = ">" + seq_id + " [" + tmp_list[0]+".." + tmp_list[1]+';' + tmp_list[2]+".." + \
-            tmp_list[3]+"]" + " [gene=" + ele.qualifiers['gene'][0] + \
+            tmp_list[3]+"]" + " [gene=" + tmp_gene_name + \
             "]" + "\n"               # '>'后的格式和已有脚本兼容
-        tmp_gene_name = ele.qualifiers['gene'][0]
+
     elif len(ele.location.parts) == 1:
         tmp_list, cds_seq = merge_sequence(ele, complete_seq)
-        # ic(type(ele.qualifiers))
         cds_note = ">" + seq_id + " [" + tmp_list[0]+".." + tmp_list[1]+"]" + \
-            " [gene=" + ele.qualifiers['gene'][0] + "]" + \
+            " [gene=" + tmp_gene_name + "]" + \
             "\n"    # '>'后的格式和已有脚本兼容
-        tmp_gene_name = ele.qualifiers['gene'][0]
+
     return cds_note, cds_seq, tmp_gene_name
 
 
@@ -152,7 +157,7 @@ def get_cds(gbk_file, flag):  # 解析gbk文件获取cds
             count += 1
             cds_note, cds_seq, tmp_gene_name = get_cds_note(
                 ele, complete_seq, seq_id, tmp_gene_name)
-            list_gene_name.append(ele.qualifiers['gene'][0])
+            list_gene_name.append(tmp_gene_name)  # 本次的基因名字 复用
             cds_fasta += format_fasta(cds_note, cds_seq, 70)
             if (flag):  # ele有可能是trna,要确保先找到一个cds后才能退出,所以放上面if的下一级
                 break
@@ -172,6 +177,7 @@ if __name__ == '__main__':
     start_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
     print('Start Time : {}'.format(start_time))
     #################################################################
+    print('\n')
     dict_file_cds_count = {}  # 每个文件中cds计数
     file_list = os.listdir(args.input)
     file_list.sort()  # key=lambda x: int(x.split('.')[0])) #根据文件名中的数字
