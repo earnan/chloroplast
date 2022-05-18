@@ -29,13 +29,6 @@ optional.add_argument('-o', '--output',
 optional.add_argument('-h', '--help', action='help', help='[帮助信息]')
 args = parser.parse_args()
 
-#################################################################
-# 格式化成2016-03-20 11:45:39形式
-begin_time = time.time()
-start_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-print('Start Time : {}'.format(start_time))
-#################################################################
-
 
 def format_fasta(note, seq, num):
     format_seq = ""
@@ -137,7 +130,7 @@ def get_cds(gbk_file, flag):  # 解析gbk文件获取cds
     seq_record = SeqIO.read(gbk_file, "genbank")
     complete_seq = str(seq_record.seq)
     complete_note, seq_id = get_complete_note(seq_record)
-    complete_fasta = format_fasta(complete_note, complete_seq, 70)  # 70换行本例不采用
+    complete_fasta = format_fasta(complete_note, complete_seq, 80)  # 80换行本例不采用
     """cds序列"""
     count = 0  # 对cds数量计数
     cds_fasta = ""
@@ -157,9 +150,17 @@ def get_cds(gbk_file, flag):  # 解析gbk文件获取cds
 
 
 if __name__ == '__main__':
+    #################################################################
+    # 格式化成2016-03-20 11: 45: 39形式
+    begin_time = time.time()
+    start_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+    print('Start Time : {}'.format(start_time))
+    #################################################################
     dict_file_cds_count = {}  # 每个文件中cds计数
     file_list = os.listdir(args.input)
     file_list.sort()  # key=lambda x: int(x.split('.')[0])) #根据文件名中的数字
+    if os.path.exists(args.output) == False:
+        os.mkdir(args.output)
     for file in file_list:
         (cds_fasta, complete_fasta, count, file_name,  list_gene_name, s) = get_cds(
             os.path.join(args.input, file), False)
@@ -169,10 +170,9 @@ if __name__ == '__main__':
             f_cds.write(cds_fasta)
             f_complete.write(complete_fasta)
     print('\n')
-
-###############################################################
-end_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-print('End Time : {}'.format(end_time))
-print('Already Run {}s'.format(time.time()-begin_time))
-print('Done')
-###############################################################
+    ###############################################################
+    end_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+    print('End Time : {}'.format(end_time))
+    print('Already Run {}s'.format(time.time()-begin_time))
+    print('Done')
+    ###############################################################
