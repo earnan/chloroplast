@@ -71,7 +71,7 @@ def get_id_list(id_list_lines):  # 第一二部分的子函数,判断args.idlist
     # id.list # MT157619.1	Camellia petelotii var. microcarpa
     """对每一行id进行前处理,带上版本号"""
     for id in id_list_lines:
-        content = id.split('\t')  # 制表符切开
+        content = id.strip('\n').split('\t')  # 制表符切开
         """ #登录号,20220107修改,需要加一个判断,保证登录号都带有版本信息".1" """
         if content[0].find('.') < 0:  # 如果不带版本信息
             print('请注意{} '.format(id.strip('\n')))
@@ -86,7 +86,7 @@ def get_id_list(id_list_lines):  # 第一二部分的子函数,判断args.idlist
         id_new = ''
         for i in range(len(content)):
             if i > 0:
-                id_new_tmp = id_new+content[i]+'_'
+                id_new_tmp = id_new+content[i].replace(" ", "_")+'_'
                 id_new = id_new_tmp  # 仅物种名
         id_new = id_new+accession  # 物种名+登录号(带v)
         id_new_list.append(id_new)
@@ -108,7 +108,7 @@ def get_id_list(id_list_lines):  # 第一二部分的子函数,判断args.idlist
         else:  # 正常情况,原始树文件没啥幺蛾子的情况
             id = id.strip('\n').replace("\t", "_").replace(
                 " ", "_")  # 之前id已经带有版本,这一步变为 NC_028725.1_Tyrophagus_longior
-            id_list.append(id)
+            id_list.append(id.rstrip('_'))
 
     print('\n', id_list, '\n', '\n', id_new_list, '\n')
     return id_list, id_new_list
