@@ -12,11 +12,15 @@
 #        License:   Copyright (C) 2022
 #
 ##########################################################
-import argparse
 from Bio import SeqIO
+from Bio.Seq import Seq
+from icecream import ic
+import argparse
+import linecache
 import os
 import re
 import time
+
 
 parser = argparse.ArgumentParser(
     add_help=False, usage='\npython3   cp_from_gbk_get_cds.py')
@@ -106,23 +110,30 @@ def get_complete_note(seq_record):  # 获取整个完整基因组ID
     return complete_note, seq_id
 
 
-def get_cds_note(ele, complete_seq, seq_id):  # 获取cds的id及序列
+def get_cds_note(ele, complete_seq, seq_id, tmp_gene_name):  # 获取cds的id及序列
+    # tmp_gene_name = ''  # 上一个有名字的cds
+    if 'gene' not in ele.qualifiers.keys():
+        print(tmp_gene_name)  # 返回上一个基因,好从其他参考找这个没名字的
     if len(ele.location.parts) == 3:
         tmp_list, cds_seq = merge_sequence(ele, complete_seq)
         cds_note = ">" + seq_id + " [" + tmp_list[0]+".." + tmp_list[1]+';' + tmp_list[2]+".." + tmp_list[3]+';' + \
             tmp_list[4]+".." + tmp_list[5]+"]" + " [gene=" + \
             ele.qualifiers['gene'][0] + "]" + "\n"  # '>'后的格式和已有脚本兼容
+        tmp_gene_name = ele.qualifiers['gene'][0]
     elif len(ele.location.parts) == 2:
         tmp_list, cds_seq = merge_sequence(ele, complete_seq)
         cds_note = ">" + seq_id + " [" + tmp_list[0]+".." + tmp_list[1]+';' + tmp_list[2]+".." + \
             tmp_list[3]+"]" + " [gene=" + ele.qualifiers['gene'][0] + \
             "]" + "\n"               # '>'后的格式和已有脚本兼容
+        tmp_gene_name = ele.qualifiers['gene'][0]
     elif len(ele.location.parts) == 1:
         tmp_list, cds_seq = merge_sequence(ele, complete_seq)
+        # ic(type(ele.qualifiers))
         cds_note = ">" + seq_id + " [" + tmp_list[0]+".." + tmp_list[1]+"]" + \
             " [gene=" + ele.qualifiers['gene'][0] + "]" + \
             "\n"    # '>'后的格式和已有脚本兼容
-    return cds_note, cds_seq
+        tmp_gene_name = ele.qualifiers['gene'][0]
+    return cds_note, cds_seq, tmp_gene_name
 
 
 def get_cds(gbk_file, flag):  # 解析gbk文件获取cds
@@ -135,18 +146,19 @@ def get_cds(gbk_file, flag):  # 解析gbk文件获取cds
     count = 0  # 对cds数量计数
     cds_fasta = ""
     list_gene_name = []  # 统计cds
+    tmp_gene_name = ''  # 上一个基因名字,为子函数get_cds_note()准备的
     for ele in seq_record.features:
         if ele.type == "CDS":
             count += 1
-            cds_note, cds_seq = get_cds_note(ele, complete_seq, seq_id)
+            cds_note, cds_seq, tmp_gene_name = get_cds_note(
+                ele, complete_seq, seq_id, tmp_gene_name)
             list_gene_name.append(ele.qualifiers['gene'][0])
             cds_fasta += format_fasta(cds_note, cds_seq, 70)
             if (flag):  # ele有可能是trna,要确保先找到一个cds后才能退出,所以放上面if的下一级
                 break
     s = '{0}有{1}个CDS'.format(os.path.basename(gbk_file), count)
     if count == 0:
-        s = '-----------------------Warning!!! {0}有{1}个CDS-----------------------\n\
-            -----------------------There may be no comments!!!-----------------------'.format(
+        s = '-----------------------Warning!!! {0}有{1}个CDS-----------------------\n-----------------------There may be no comments!!!-----------------------'.format(
             os.path.basename(gbk_file), count)
     print(s)
     print(list_gene_name)
