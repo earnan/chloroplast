@@ -53,7 +53,7 @@ optional.add_argument(
 
 
 optional.add_argument(
-    '-i', '--info', metavar='[完整的帮助信息]', help="'运行则-i", action='store_true', required=False)
+    '-i', '--info', help="完整的帮助信息,运行则-i", action='store_true', required=False)
 optional.add_argument('-h', '--help', action='help', help='帮助信息')
 args = parser.parse_args()
 if args.info:
