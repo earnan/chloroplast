@@ -14,7 +14,7 @@
 ##########################################################
 from Bio import SeqIO
 from Bio.Seq import Seq
-from icecream import ic
+#from icecream import ic
 import argparse
 import linecache
 import os
@@ -27,7 +27,7 @@ optional = parser.add_argument_group('可选项')
 required = parser.add_argument_group('必选项')
 
 optional.add_argument(
-    '-f1', '--function1', metavar='[没有幺蛾子]', help="'运行时-f1,输入-1 -2 -3", action='store_true', required=False)
+    '-f1', '--function1', help="没有幺蛾子,运行时-f1,输入-1 -2 -3", action='store_true', required=False)
 optional.add_argument(
     '-1', '--idlist', metavar='[file]', type=str, help='输入id.list',  required=False)  # id.list文件中登录号一列 \t 物种名占两列
 optional.add_argument(
@@ -37,7 +37,7 @@ optional.add_argument(
 
 
 optional.add_argument(
-    '-f2', '--function2', metavar='[有幺蛾子]', help="'运行时-f2,输入-1 -2 -3 -c1/-c2", action='store_true', required=False)
+    '-f2', '--function2', help="有幺蛾子,运行时-f2,输入-1 -2 -3 -c1/-c2", action='store_true', required=False)
 optional.add_argument(
     '-c1', '--check1', metavar='[原始树只有登录号(无版本)]', help="使用则-c1", action='store_true', required=False)
 optional.add_argument(
@@ -45,7 +45,7 @@ optional.add_argument(
 
 
 optional.add_argument(
-    '-f3', '--function3', metavar='[功能3,建议有极特殊情况时使用]', help="'运行时-f3,输入-id1 -id2 -2 -3", action='store_true', required=False)
+    '-f3', '--function3', help="前两种用不了就很烦,运行时-f3,输入-id1 -id2 -2 -3", action='store_true', required=False)
 optional.add_argument(
     '-id1', '--idfile1', metavar='[初始ID文件]', type=str, help="输入原id",   required=False)
 optional.add_argument(
