@@ -79,8 +79,8 @@ def merge_sequence(ele, complete_seq):  # 合并获取到的序列
 
 def get_complete_note(seq_record):  # 获取整个完整基因组ID
     seq_id = ''
-    # if seq_record.description.find('chloroplast'):#有bug
-    if seq_record.description.split(',')[-2].split()[-1] == 'chloroplast' or seq_record.description.split(',')[-2].split()[-1] == 'plastid':
+    # if seq_record.description.find('chloroplast'):#有bug,用str格式化后就没问题了
+    if str(seq_record.description).find('chloroplast') or seq_record.description.split(',')[-2].split()[-1] == 'chloroplast' or seq_record.description.split(',')[-2].split()[-1] == 'plastid':
         seq_id = seq_record.description.split(
             'chloroplast')[0].replace(' ', '_').rstrip('_')
         name = seq_record.name
@@ -144,6 +144,10 @@ def get_cds(gbk_file, flag):  # 解析gbk文件获取cds
             if (flag):  # ele有可能是trna,要确保先找到一个cds后才能退出,所以放上面if的下一级
                 break
     s = '{0}有{1}个CDS'.format(os.path.basename(gbk_file), count)
+    if count == 0:
+        s = '-----------------------Warning!!! {0}有{1}个CDS-----------------------\n\
+            -----------------------There may be no comments!!!-----------------------'.format(
+            os.path.basename(gbk_file), count)
     print(s)
     print(list_gene_name)
     return cds_fasta, complete_fasta, count, os.path.basename(gbk_file), list_gene_name, s
