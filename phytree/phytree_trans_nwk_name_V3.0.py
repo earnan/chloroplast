@@ -39,9 +39,9 @@ optional.add_argument(
 optional.add_argument(
     '-f2', '--function2', help="有幺蛾子,运行时-f2,输入-1 -2 -3 -c1/-c2", action='store_true', required=False)
 optional.add_argument(
-    '-c1', '--check1', metavar='[原始树只有登录号(无版本)]', help="使用则-c1", action='store_true', required=False)
+    '-c1', '--check1', help="原始树只有登录号(无版本),使用则-c1", action='store_true', required=False)
 optional.add_argument(
-    '-c2', '--check2', metavar='[NC后为空格的情况]', help="适用于bayes,使用时-c2", action='store_true', required=False)
+    '-c2', '--check2', help="NC后为空格的情况,适用于bayes,使用时-c2", action='store_true', required=False)
 
 
 optional.add_argument(
