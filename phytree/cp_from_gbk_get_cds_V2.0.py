@@ -23,7 +23,9 @@ import time
 
 
 parser = argparse.ArgumentParser(
-    add_help=False, usage='\npython3   cp_from_gbk_get_cds.py')
+    add_help=False, usage='\n\
+python3   cp_from_gbk_get_cds.py\n\
+每个物种都生成cds及完整序列2个文件')
 optional = parser.add_argument_group('可选项')
 required = parser.add_argument_group('必选项')
 optional.add_argument('-i', '--input',
