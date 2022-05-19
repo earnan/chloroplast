@@ -179,12 +179,14 @@ if __name__ == '__main__':
     print('Start Time : {}'.format(start_time))
     #################################################################
     print('\n')
+
     """初始化"""
     dict_file_cds_count = {}  # 每个文件中cds计数
     file_list = os.listdir(args.input)
     file_list.sort()  # key=lambda x: int(x.split('.')[0])) #根据文件名中的数字
     if os.path.exists(args.output) == False:
         os.mkdir(args.output)
+
     """主程序"""
     for file in file_list:
         ingbk_path = os.path.join(args.input, file)
@@ -196,6 +198,7 @@ if __name__ == '__main__':
                 open((args.output+os.sep+file_name.rstrip('.gbk')+'_cds.fasta'), 'w') as f_cds:
             f_cds.write(cds_fasta)
             f_complete.write(complete_fasta)
+
     print('\n')
     ###############################################################
     end_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
