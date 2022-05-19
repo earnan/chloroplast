@@ -2,20 +2,21 @@
 # -*- coding : utf-8 -*-
 ##########################################################
 #
-#       Filename:   mt_extract2mafft.py
+#       Filename:   cp_extract_and_mafft_V1.0.py
 #         Author:   yujie
-#    Description:   mt_extract2mafft.py
+#    Description:   cp_extract_and_mafft_V1.0.py
 #        Version:   1.0
-#           Time:   2022/03/28 17:00:58
-#  Last Modified:   2022/03/28 17:00:58
+#           Time:   2022/05/19 12:01:13
+#  Last Modified:   2022/05/19 12:01:13
 #        Contact:   hi@arcsona.cn
 #        License:   Copyright (C) 2022
 #
 ##########################################################
-# from icecream import ic
-from Bio import SearchIO
-import argparse
 from Bio import SeqIO
+from Bio.Seq import Seq
+from icecream import ic
+import argparse
+import linecache
 import os
 import re
 import time
