@@ -167,6 +167,7 @@ if __name__ == '__main__':
     # 功能3
     if args.function3:  # 原名字,新名字,旧可编辑树文件,新的树文件
         with open(args.treenwk, 'r') as f_tree1, open(args.outfile, 'w') as f_out:
+            tree_nwk_line = f_tree1.read()  # 直接读成一个长字符串
             id_list = get_id_list_from_file(args.idfile1)
             id_new_list = get_id_list_from_file(args.idfile2)
             replace_with_str(tree_nwk_line, f_out, id_list, id_new_list)
