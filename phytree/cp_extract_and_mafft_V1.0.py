@@ -42,14 +42,6 @@ optional.add_argument('-c2', '--flag2', help='是否运行mafft?默认否,运行
 optional.add_argument('-h', '--help', action='help', help='[帮助信息]')
 args = parser.parse_args()
 
-#################################################################
-# 格式化成2016-03-20 11:45:39形式
-begin_time = time.time()
-start_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-print('Start Time : {}'.format(start_time))
-#################################################################
-"""模板函数"""
-
 
 def format_fasta(note, seq, num):
     format_seq = ""
@@ -173,11 +165,3 @@ if __name__ == '__main__':
         cmd3 = "rm {0}/*.aln".format(args.outdir2)
         # print(cmd3)
         os.system(cmd3)
-
-
-###############################################################
-end_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-print('End Time : {}'.format(end_time))
-print('Already Run {}s'.format(time.time()-begin_time))
-print('Done')
-###############################################################
