@@ -124,7 +124,6 @@ def get_cds_note(ele, complete_seq, seq_id, tmp_gene_name):  # 获取cds的id及
         cds_note = ">" + seq_id + " [" + tmp_list[0]+".." + tmp_list[1]+';' + tmp_list[2]+".." + tmp_list[3]+';' + \
             tmp_list[4]+".." + tmp_list[5]+"]" + " [gene=" + \
             tmp_gene_name + "]" + "\n"  # '>'后的格式和已有脚本兼容
-        tmp_gene_name = ele.qualifiers['gene'][0]
 
     elif len(ele.location.parts) == 2:
         tmp_list, cds_seq = merge_sequence(ele, complete_seq)
@@ -159,15 +158,17 @@ def get_cds(gbk_file, flag):  # 解析gbk文件获取cds
                 ele, complete_seq, seq_id, tmp_gene_name)
             list_gene_name.append(tmp_gene_name)  # 本次的基因名字 复用
             cds_fasta += format_fasta(cds_note, cds_seq, 70)
+
             if (flag):  # ele有可能是trna,要确保先找到一个cds后才能退出,所以放上面if的下一级
                 break
-    s = '{0}有{1}个CDS'.format(os.path.basename(gbk_file), count)
+    file_name = os.path.basename(gbk_file)
+    s = '{0}有{1}个CDS'.format(file_name, count)
     if count == 0:
         s = '-----------------------Warning!!! {0}有{1}个CDS-----------------------\n-----------------------There may be no comments!!!-----------------------'.format(
-            os.path.basename(gbk_file), count)
+            file_name, count)
     print(s)
     print(list_gene_name)
-    return cds_fasta, complete_fasta, count, os.path.basename(gbk_file), list_gene_name, s
+    return cds_fasta, complete_fasta, count, file_name, list_gene_name, s
 
 
 if __name__ == '__main__':
@@ -178,15 +179,19 @@ if __name__ == '__main__':
     print('Start Time : {}'.format(start_time))
     #################################################################
     print('\n')
+    """初始化"""
     dict_file_cds_count = {}  # 每个文件中cds计数
     file_list = os.listdir(args.input)
     file_list.sort()  # key=lambda x: int(x.split('.')[0])) #根据文件名中的数字
     if os.path.exists(args.output) == False:
         os.mkdir(args.output)
+    """主程序"""
     for file in file_list:
+        ingbk_path = os.path.join(args.input, file)
         (cds_fasta, complete_fasta, count, file_name,  list_gene_name, s) = get_cds(
-            os.path.join(args.input, file), False)
+            ingbk_path, False)
         dict_file_cds_count[file_name] = count  # 每个文件中cds计数
+        """写入文件"""
         with open((args.output+os.sep+file_name.rstrip('.gbk')+'_complete.fasta'), 'w') as f_complete, \
                 open((args.output+os.sep+file_name.rstrip('.gbk')+'_cds.fasta'), 'w') as f_cds:
             f_cds.write(cds_fasta)
