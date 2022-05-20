@@ -5,9 +5,9 @@
 #       Filename:   cp_from_gbk_get_cds.py
 # Original Author:
 #    Description:   cp_from_gbk_get_cds.py
-#        Version:   1.0
+#        Version:   2.0
 #           Time:   2022/03/09 15:21:51
-#  Last Modified:   2022/03/09 15:21:51
+#  Last Modified:   2022/05/19 16:45:02
 #        Contact:   hi@arcsona.cn
 #        License:   Copyright (C) 2022
 #
@@ -21,7 +21,6 @@ import os
 import re
 import time
 
-
 parser = argparse.ArgumentParser(
     add_help=False, usage='\n\
 python3   cp_from_gbk_get_cds.py\n\
@@ -31,7 +30,9 @@ required = parser.add_argument_group('必选项')
 optional.add_argument('-i', '--input',
                       metavar='[dir]', help='输入gbk所在目录', type=str, default='E:\\Examples\\cp_from_gbk_get_cds\\gbk', required=False)
 optional.add_argument('-o', '--output',
-                      metavar='[dir]', help='输出的路径', type=str, default='E:\\Examples\\cp_from_gbk_get_cds\\out', required=False)
+                      metavar='[dir]', help='输出的路径', type=str, default='E:\\Examples\\cp_from_gbk_get_cds\\cds', required=False)
+optional.add_argument('-c', '--check', help='是否用GAP构造序列,默认否,使用时-c',
+                      action='store_true', required=False)
 optional.add_argument('-h', '--help', action='help', help='[帮助信息]')
 args = parser.parse_args()
 
@@ -142,7 +143,28 @@ def get_cds_note(ele, complete_seq, seq_id, tmp_gene_name):  # 获取cds的id及
     return cds_note, cds_seq, tmp_gene_name
 
 
-def get_cds(gbk_file, flag):  # 解析gbk文件获取cds
+def gene_name_standardization(gene_name):  # 格式化基因名字,可重复使用
+    all_gene_list_upper = ['ATP6', 'ATP8', 'CYTB', 'COX1', 'COX2',
+                           'COX3', 'ND1', 'ND2', 'ND3', 'ND4', 'ND4L', 'ND5', 'ND6']
+    all_gene_list_lower = ['atp6', 'atp8', 'cob', 'cox1', 'cox2',
+                           'cox3', 'nad1', 'nad2', 'nad3', 'nad4', 'nad4l', 'nad5', 'nad6']
+    if gene_name.upper() in all_gene_list_upper:
+        gene_name = gene_name.upper()
+    else:
+        i = 0
+        while i < 13:
+            if all_gene_list_lower[i] == gene_name:
+                gene_name = all_gene_list_upper[i]
+                break
+            else:
+                i += 1
+        if i >= 13:
+            print(gene_name)
+            print('WARNING!Please check!')
+    return gene_name
+
+
+def get_cds(gbk_file, flag, dict_gene_len):  # 解析gbk文件获取cds
     """完整基因组"""
     seq_record = SeqIO.read(gbk_file, "genbank")
     complete_seq = str(seq_record.seq)
@@ -158,9 +180,12 @@ def get_cds(gbk_file, flag):  # 解析gbk文件获取cds
             count += 1
             cds_note, cds_seq, tmp_gene_name = get_cds_note(
                 ele, complete_seq, seq_id, tmp_gene_name)
-            list_gene_name.append(tmp_gene_name)  # 本次的基因名字 复用
+            # list_gene_name.append(tmp_gene_name)  # 本次的基因名字 复用
             cds_fasta += format_fasta(cds_note, cds_seq, 70)
-
+            gene_name = tmp_gene_name
+            gene_name = gene_name  # gene_name_standardization(gene_name)
+            list_gene_name.append(gene_name)  # 存入列表
+            # dict_gene_len[gene_name].append(3*(len(ele.qualifiers['translation'][0])+1))  # cds序列长度
             if (flag):  # ele有可能是trna,要确保先找到一个cds后才能退出,所以放上面if的下一级
                 break
     file_name = os.path.basename(gbk_file)
@@ -170,7 +195,23 @@ def get_cds(gbk_file, flag):  # 解析gbk文件获取cds
             file_name, count)
     print(s)
     print(list_gene_name)
-    return cds_fasta, complete_fasta, count, file_name, list_gene_name, s
+    return cds_fasta, complete_fasta, count, file_name, list_gene_name, s, dict_gene_len, seq_id
+
+
+def create_gene_by_gap(dict_missing_gene, dict_gene_len, cds_file_path):  # 用gap构造没有的基因
+    for i in dict_missing_gene.keys():
+        cds_fasta = ''
+        for j in dict_missing_gene[i]:
+            ave = round(sum(dict_gene_len[j]) /
+                        len(dict_gene_len[j]))  # 该基因平均长度
+            cds_note = (i+' [0..0]'+' [gene={}]').format(j)
+            cds_seq = ave*'-'
+            cds_fasta += format_fasta(cds_note, cds_seq, 70)
+        print(cds_fasta)
+        file_name = (i.split('_')[-2]+'_' +
+                     i.split('_')[-1]+'.1').lstrip('>')
+        with open(cds_file_path, 'ab+') as f_cds:
+            f_cds.write(cds_fasta.encode())
 
 
 if __name__ == '__main__':
@@ -182,6 +223,24 @@ if __name__ == '__main__':
     #################################################################
     print('\n')
 
+    """写入统计文件"""
+    if os.path.exists(args.output) == False:
+        os.mkdir(args.output)
+    with open((args.output+os.sep+'log'), 'w') as f_log:
+        f_log.write(
+            'gene{0}atp6{0}atp8{0}cob{0}cox1{0}cox2{0}cox3{0}nad1{0}nad2{0}nad3{0}nad4{0}nad4L{0}nad5{0}nad6\n'.format('\t'))  # 小写
+        f_log.write(
+            'gene{0}ATP6{0}ATP8{0}CYTB{0}COX1{0}COX2{0}COX3{0}ND1{0}ND2{0}ND3{0}ND4{0}ND4L{0}ND5{0}ND6\n'.format('\t'))  # 大写
+    all_gene_list_upper = ['ATP6', 'ATP8', 'CYTB', 'COX1', 'COX2',
+                           'COX3', 'ND1', 'ND2', 'ND3', 'ND4', 'ND4L', 'ND5', 'ND6']
+    all_gene_list_lower = ['atp6', 'atp8', 'cob', 'cox1', 'cox2',
+                           'cox3', 'nad1', 'nad2', 'nad3', 'nad4', 'nad4l', 'nad5', 'nad6']
+    """统计初始化"""
+    dict_missing_gene = {}  # 每个文件中缺失的基因统计,总 字典
+    dict_gene_len = {}  # 统计每个基因在不同物种中的长度,取平均
+    for i in all_gene_list_upper:
+        dict_gene_len[i] = []
+
     """初始化"""
     dict_file_cds_count = {}  # 每个文件中cds计数
     file_list = os.listdir(args.input)
@@ -192,14 +251,16 @@ if __name__ == '__main__':
     """主程序"""
     for file in file_list:
         ingbk_path = os.path.join(args.input, file)
-        (cds_fasta, complete_fasta, count, file_name,  list_gene_name, s) = get_cds(
-            ingbk_path, False)
+        cds_fasta, complete_fasta, count, file_name,  list_gene_name, s, dict_gene_len, seq_id = get_cds(
+            ingbk_path, False, dict_gene_len)
+        print(file_name, 'done\n')
         dict_file_cds_count[file_name] = count  # 每个文件中cds计数
         """写入文件"""
-        with open((args.output+os.sep+file_name.rstrip('.gbk')+'_complete.fasta'), 'w') as f_complete, \
-                open((args.output+os.sep+file_name.rstrip('.gbk')+'_cds.fasta'), 'w') as f_cds:
-            f_cds.write(cds_fasta)
-            f_complete.write(complete_fasta)
+        with open((args.output+os.sep+seq_id+'.fasta'), 'wb') as f_complete, \
+                open((args.output+os.sep+file_name.rstrip('.gbk')+'_cds.fasta'), 'wb') as f_cds, \
+                open((args.output+os.sep+'log'), 'a+') as f_log:
+            f_cds.write(cds_fasta.encode())
+            f_complete.write(complete_fasta.encode())
 
     print('\n')
     ###############################################################
