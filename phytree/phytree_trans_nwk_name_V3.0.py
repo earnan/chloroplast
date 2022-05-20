@@ -74,7 +74,7 @@ def get_id_list(id_list_lines):  # 第一二部分的子函数,判断args.idlist
         content = id.strip('\n').split('\t')  # 制表符切开
         """ #登录号,20220107修改,需要加一个判断,保证登录号都带有版本信息".1" """
         if content[0].find('.') < 0:  # 如果不带版本信息
-            print('请注意{} '.format(id.strip('\n')))
+            print('\n请注意{}没有版本信息! '.format(id.strip('\n')))
             accession_0 = content[0]+'.1'
             accession = '_'+content[0]+'.1'
             # MT157619.1	Camellia petelotii var. microcarpa
@@ -110,7 +110,7 @@ def get_id_list(id_list_lines):  # 第一二部分的子函数,判断args.idlist
                 " ", "_")  # 之前id已经带有版本,这一步变为 NC_028725.1_Tyrophagus_longior
             id_list.append(id.rstrip('_'))
 
-    print('\n', id_list, '\n', '\n', id_new_list, '\n')
+    #print('\n', id_list, '\n', '\n', id_new_list, '\n')
     return id_list, id_new_list
 
 
@@ -151,6 +151,11 @@ if __name__ == '__main__':
             id_new_list = []  # 新的树文件的id列表
             count = []  # 计数
             (id_list, id_new_list) = get_id_list(id_list_lines)
+            if tree_nwk_line.startswith('#NEXUS'):
+                print("\nBayes! Try use '_' to replace '.' ")
+                for i in range(len(id_list)):
+                    id_list[i] = id_list[i].replace('.', '_')
+            print('\n', id_list, '\n', '\n', id_new_list, '\n')
             replace_with_str(tree_nwk_line, f_out, id_list, id_new_list)
 
     # 功能2
@@ -162,6 +167,7 @@ if __name__ == '__main__':
             id_new_list = []  # 新的树文件的id列表
             count = []  # 计数
             (id_list, id_new_list) = get_id_list(id_list_lines)
+            print('\n', id_list, '\n', '\n', id_new_list, '\n')
             replace_with_str(tree_nwk_line, f_out, id_list, id_new_list)
 
     # 功能3
@@ -170,6 +176,7 @@ if __name__ == '__main__':
             tree_nwk_line = f_tree1.read()  # 直接读成一个长字符串
             id_list = get_id_list_from_file(args.idfile1)
             id_new_list = get_id_list_from_file(args.idfile2)
+            print('\n', id_list, '\n', '\n', id_new_list, '\n')
             replace_with_str(tree_nwk_line, f_out, id_list, id_new_list)
 
     ###############################################################
