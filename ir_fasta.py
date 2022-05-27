@@ -28,7 +28,8 @@ optional.add_argument('-i', '--input',
                       metavar='[xxx.fasta]', help='输入fa文件', type=str, required=False)
 optional.add_argument(
     '-l', '--lenth', metavar='[基因序列长度]', type=bool, help="有-i 参数即可输出", default='1', required=False)
-
+optional.add_argument('-gc', '--gccount', help='GC?默认否,运行则-gc ',
+                      action='store_true', required=False)
 
 optional.add_argument('-s1', '--seq1',
                       metavar='[ATG→CAT]', help='DNA反向互补', type=str, required=False)
@@ -107,11 +108,39 @@ def judgment_input_type(string):
     return seq, abs_dir
 
 
+def gccount(seq):
+    BaseSum, Length = 0, []  # 碱基总个数初始化，所有序列长度初始化为列表结构
+    no_c, no_g, no_a, no_t, no_n = 0, 0, 0, 0, 0  # 各碱基数量
+    for line in seq:
+        BaseSum += len(line)
+        Length.append(len(line))
+        no_c += line.count('C')
+        no_g += line.count('G')
+        no_a += line.count('A')
+        no_t += line.count('T')
+        no_n += line.count('N')
+    print(BaseSum)
+    print(Length)
+    print('序列个数:'+str(len(Length)))
+    print('最短的序列长度是:'+str(min(Length)))
+    print('最长的序列长度是:'+str(max(Length)))
+    print("总碱基数目:", BaseSum)
+    print("A百分比", "%.1f" % ((float(no_a*100))/BaseSum), '%')
+    print("T百分比", "%.1f" % ((float(no_t*100))/BaseSum), '%')
+    print("C百分比", "%.1f" % ((float(no_c*100))/BaseSum), '%')
+    print("G百分比", "%.1f" % ((float(no_g*100))/BaseSum), '%')
+    print("N百分比", "%.1f" % ((float(no_n*100))/BaseSum), '%')
+    print("GC含量是", "%.1f" % ((float(no_g*100+no_c*100))/BaseSum), '%')
+    return 0
+
+
 if args.input:
     input_file = open(args.input, 'r')
     seq_dict = readfasta(input_file)
     seq_id = list(seq_dict.keys())[0]
     seq = list(seq_dict.values())[0]
+    if args.gccount:
+        gccount(seq)
     if args.lenth:
         print(len(seq))
     ir_seq = ir1(seq)
