@@ -14,7 +14,7 @@
 ##########################################################
 from Bio import SeqIO
 from Bio.Seq import Seq
-from icecream import ic
+#from icecream import ic
 import argparse
 import linecache
 import os
@@ -109,21 +109,18 @@ def judgment_input_type(string):
 
 
 def gccount(seq):
-    BaseSum, Length = 0, []  # 碱基总个数初始化，所有序列长度初始化为列表结构
+    BaseSum = 0  # 碱基总个数初始化
     no_c, no_g, no_a, no_t, no_n = 0, 0, 0, 0, 0  # 各碱基数量
-    for line in seq:
-        BaseSum += len(line)
-        Length.append(len(line))
-        no_c += line.count('C')
-        no_g += line.count('G')
-        no_a += line.count('A')
-        no_t += line.count('T')
-        no_n += line.count('N')
-    print(BaseSum)
-    print(Length)
-    print('序列个数:'+str(len(Length)))
-    print('最短的序列长度是:'+str(min(Length)))
-    print('最长的序列长度是:'+str(max(Length)))
+    BaseSum = len(seq)
+    no_c = seq.count('C')
+    no_g = seq.count('G')
+    no_a = seq.count('A')
+    no_t = seq.count('T')
+    no_n = seq.count('N')
+    # print(BaseSum)
+    # print('序列个数:'+str(len(Length)))
+    # print('最短的序列长度是:'+str(min(Length)))
+    # print('最长的序列长度是:'+str(max(Length)))
     print("总碱基数目:", BaseSum)
     print("A百分比", "%.1f" % ((float(no_a*100))/BaseSum), '%')
     print("T百分比", "%.1f" % ((float(no_t*100))/BaseSum), '%')
