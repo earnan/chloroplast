@@ -23,6 +23,7 @@ import time
 parser = argparse.ArgumentParser(
     add_help=False, usage='\
 \npython3   cp_add_gene_seq.py\n\
+位置分段,输入时要加上双引号\n\
 step1\n\
 step2\n\
 V1.0')
@@ -105,7 +106,8 @@ def merge_sequence(pos_list, seq):  # 合并获取到的序列,顺便排一下�
 
 
 def trans2acid(cds_seq):  # 翻译成氨基酸,返回是否正确以及第一个终止子在基因序列上的相对位置
-    start_code_table = ['TTG', 'CTG', 'ATT', 'ATC', 'ATA', 'ATG', 'GTG']
+    start_code_table = ['TTG', 'CTG', 'ATT',
+                        'ATC', 'ATA', 'ATG', 'GTG']  # 没有rna编辑
     tmp_flag = False
     inter_number = 0
     if len(cds_seq) % 3 == 1:
@@ -118,9 +120,11 @@ def trans2acid(cds_seq):  # 翻译成氨基酸,返回是否正确以及第一个
     print('------------------------------------------------------------')
     print(acid)
 
-    if not cds_seq[0:3] in start_code_table:
+    if cds_seq[0:3] not in start_code_table and cds_seq[0:3] != 'ACG':
         print('#####start is wrong!')
     else:
+        if cds_seq[0:3] == 'ACG':
+            print('-----------------------------------------may be rna edit!')
         if acid.count('*') > 1:
             print('#####interior is wrong!')
             inter_number = acid.find('*')
