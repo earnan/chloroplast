@@ -2,16 +2,17 @@
 # -*- coding : utf-8 -*-
 ##########################################################
 #
-#       Filename:   mt_move_gene_pos_v3.0.py
+#       Filename:   cp_move_gene_pos_v4.0.py
 #         Author:   yujie
-#    Description:   mt_move_gene_pos_v3.0.py
-#        Version:   4.0
-#           Time:   2022/06/07 09:38:21
-#  Last Modified:   2022/06/07 18:38:21
+#    Description:   cp_move_gene_pos_v4.0.py
+#        Version:   1.0
+#           Time:   2022/06/15 15:09:38
+#  Last Modified:   2022/06/15 15:09:38
 #        Contact:   hi@arcsona.cn
 #        License:   Copyright (C) 2022
 #
 ##########################################################
+
 from Bio import SeqIO
 from Bio.Seq import Seq
 #from icecream import ic
@@ -26,7 +27,7 @@ parser = argparse.ArgumentParser(
 \npython3   线粒体平移基因修改位置V4.0\n\
 不分开操作,则n1=0,n2有效\n\
 即输入-n2 x 即可\n\
-E:\OneDrive\jshy信息部\Script\mitochondrion\annotation\mt_move_gene_pos_v4.0.py\n\
+E:\OneDrive\jshy信息部\Script\chloroplast\annotation\cp_move_gene_pos_v4.0.py\n\
 V4.0')
 optional = parser.add_argument_group('可选项')
 required = parser.add_argument_group('必选项')
