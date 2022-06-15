@@ -5,7 +5,7 @@
 #       Filename:   cp_move_gene_pos_v4.0.py
 #         Author:   yujie
 #    Description:   cp_move_gene_pos_v4.0.py
-#        Version:   1.0
+#        Version:   4.0
 #           Time:   2022/06/15 15:09:38
 #  Last Modified:   2022/06/15 15:09:38
 #        Contact:   hi@arcsona.cn
@@ -24,19 +24,19 @@ import time
 
 parser = argparse.ArgumentParser(
     add_help=False, usage='\
-\npython3   线粒体平移基因修改位置V4.0\n\
+\npython3   叶绿体平移基因修改位置/排序注释文件V4.0\n\
+E:\OneDrive\jshy信息部\Script\chloroplast\annotation\cp_move_gene_pos_v4.0.py\n\
 不分开操作,则n1=0,n2有效\n\
 即输入-n2 x 即可\n\
-E:\OneDrive\jshy信息部\Script\chloroplast\annotation\cp_move_gene_pos_v4.0.py\n\
 V4.0')
 optional = parser.add_argument_group('可选项')
 required = parser.add_argument_group('必选项')
 optional.add_argument(
-    '-i', '--input', metavar='[file]', type=str, help='要修改的文件,需输入', required=False)
-optional.add_argument(
     '-fa', '--infasta', metavar='[file]', type=str, help='要修改的fsa,使用时需要输入', required=False)
 optional.add_argument(
-    '-o', '--output', metavar='[file]', type=str, help='输出文件,需输入', required=False)
+    '-i', '--ininfo', metavar='[file]', type=str, help='要修改的注释,需输入', required=False)
+optional.add_argument(
+    '-o', '--outinfo', metavar='[file]', type=str, help='输出注释,需输入', required=False)
 optional.add_argument(
     '-ln', '--line_number', metavar='[int]', type=int, help='从第几行开始分开操作,默认不分开', default=1,  required=False)
 optional.add_argument(
@@ -49,7 +49,7 @@ optional.add_argument('-h', '--help', action='help', help='帮助信息')
 args = parser.parse_args()
 if args.info:
     print(os.path.abspath(__file__))
-    print("\n以下是帮助信息: ")
+    print("\n以下是帮助信息(mt): ")
     print("     适用于内含子外显子")
     print("     #20220210第三版考虑了分段操作,仍需进一步排序\n      分段操作即修改环状的起点\n      此外第三版都改为了子函数")
     print("     增加了排序函数")
@@ -120,57 +120,36 @@ def get_new_line(line, n, max_len):
 
 
 # #############################################################################################挪动碱基
-if args.line_number == 1 and args.number2 > 0 and args.infasta:  # 仅考虑把末尾n2 bp碱基挪到开头
-    abs_path = os.path.abspath(args.infasta)
-    indir_path = os.path.dirname(abs_path)
-    file_prefix = os.path.basename(args.infasta).split('.')[0]
-    with open(args.infasta, 'r') as fi_handle:
-        tmp_dict = {}
-        seq_id = fi_handle.readline()
-        seq = fi_handle.readline().strip()  # 注意末尾有换行
-        max_len = len(seq)
-        tmp_dict[seq_id] = seq
-    """末尾挪到开头"""
-    n2 = args.number2
-    last = seq[-n2:]
-    # print(last+seq.rstrip(last)) #可能会产生bug
-    s = ''
-    tmp_list = list(seq)
-    for i in range(n2):
-        tmp_list.pop()  # pop函数默认返回被删除的值  直接用就好
-    for i in tmp_list:
-        s += i
-    new_seq = last+s
-    # print(s)
-    with open(os.path.join(indir_path, file_prefix+'.fsa2'), 'w') as fo_handle:
-        fo_handle.write(seq_id)
-        fo_handle.write(new_seq+'\n')
+if args.line_number == 1 and args.number2 and args.infasta:  # 仅考虑把末尾n2 bp碱基挪到开头   要求n2>0
+    if args.number2 > 0:
+        abs_path = os.path.abspath(args.infasta)
+        indir_path = os.path.dirname(abs_path)
+        file_prefix = os.path.basename(args.infasta).split('.')[0]
+        with open(args.infasta, 'r') as fi_handle:
+            tmp_dict = {}
+            seq_id = fi_handle.readline()
+            seq = fi_handle.readline().strip()  # 注意末尾有换行
+            max_len = len(seq)
+            tmp_dict[seq_id] = seq
+        """末尾挪到开头"""
+        n2 = args.number2
+        last = seq[-n2:]
+        # print(last+seq.rstrip(last)) #可能会产生bug
+        s = ''
+        tmp_list = list(seq)
+        for i in range(n2):
+            tmp_list.pop()  # pop函数默认返回被删除的值  直接用就好
+        for i in tmp_list:
+            s += i
+        new_seq = last+s
+        # print(s)
+        with open(os.path.join(indir_path, file_prefix+'.fsa2'), 'w') as fo_handle:
+            fo_handle.write(seq_id)
+            fo_handle.write(new_seq+'\n')
 
-# #############################################################################处理注释信息
-
-"""平移的主函数"""
-fi = open(args.input, 'r')
-abs_path = os.path.abspath(args.input)
-indir_path = os.path.dirname(abs_path)
-tmp_path = os.path.join(indir_path, 'tmp')
-tmp = open(tmp_path, 'w')
-ln = args.line_number
-n1 = args.number1
-n2 = args.number2
-for i in range(0, ln-1):  # 前(ln-1)行平移n1距离,从第ln行开始平移n2距离
-    line = fi.readline()
-    new_line = get_new_line(line, n1, max_len)
-    tmp.write(new_line)
-for line in fi:
-    if line.strip() != '':  # 20220609 考虑输入的注释信息 下面有几行空行
-        new_line = get_new_line(line, n2, max_len)
-        tmp.write(new_line)
-print('\n')
-fi.close()
-tmp.close()
+# ################################################################################################排序的子函数
 
 
-# 排序的子函数
 def pos_sort(input_file, output_file):
     fi = open(input_file, 'r')  # 打开tmp
     fo = open(output_file, 'w')
@@ -184,12 +163,13 @@ def pos_sort(input_file, output_file):
     """判断"""
     for i in sorted(dic):  # 排序
         line = dic[i].strip('\n')  # 去除了两端换行
-        if line.startswith('rRNA'):  # rrna
-            rrn_n += 1
-            n = 'rRNA'+str(rrn_n)
-        elif line.startswith('tRNA'):  # trna
+        # trna
+        if line.startswith('tRNA') or line.split('\t')[2].startswith('tRNA'):
             trn_n += 1
             n = 'tRNA'+str(trn_n)
+        elif line.startswith('rRNA'):  # rrna
+            rrn_n += 1
+            n = 'rRNA'+str(rrn_n)
         elif line.startswith('D-loop'):  # dloop
             dloop_n += 1
             n = 'D-loop'
@@ -206,5 +186,33 @@ def pos_sort(input_file, output_file):
         fo.write(line.replace(old_str, new_str)+'\n')
     return 0
 
+# #############################################################################处理注释信息
 
-pos_sort(tmp_path, args.output)
+
+if args.line_number and args.number2 and args.ininfo:
+    if args.number2 > 0:
+        """平移"""
+        fi = open(args.ininfo, 'r')
+        abs_path = os.path.abspath(args.ininfo)
+        indir_path = os.path.dirname(abs_path)
+        tmp_path = os.path.join(indir_path, 'tmp')
+        tmp = open(tmp_path, 'w')
+        ln = args.line_number
+        n1 = args.number1
+        n2 = args.number2
+        for i in range(0, ln-1):  # 前(ln-1)行平移n1距离,从第ln行开始平移n2距离
+            line = fi.readline()
+            new_line = get_new_line(line, n1, max_len)
+            tmp.write(new_line)
+        for line in fi:
+            if line.strip() != '':  # 20220609 考虑输入的注释信息 下面有几行空行
+                new_line = get_new_line(line, n2, max_len)
+                tmp.write(new_line)
+        print('\n')
+        fi.close()
+        tmp.close()
+        """排序"""
+        pos_sort(tmp_path, args.outinfo)
+
+if args.ininfo and args.outinfo:
+    pos_sort(args.ininfo, args.outinfo)
