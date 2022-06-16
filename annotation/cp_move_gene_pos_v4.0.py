@@ -15,7 +15,7 @@
 
 from Bio import SeqIO
 from Bio.Seq import Seq
-#from icecream import ic
+# from icecream import ic
 import argparse
 import linecache
 import os
@@ -54,6 +54,7 @@ if args.info:
     print("     #20220210第三版考虑了分段操作,仍需进一步排序\n      分段操作即修改环状的起点\n      此外第三版都改为了子函数")
     print("     增加了排序函数")
     print("     #20220607考虑跨首尾基因排序到开头,其自己的计数")
+    print("     #20220615从mt复制来 进行修改为V5.0")
     print("\n")
 
 
@@ -184,11 +185,22 @@ def pos_sort(input_file, output_file):
         new_str = n
         print(line.replace(old_str, new_str))
         fo.write(line.replace(old_str, new_str)+'\n')
+    fi.close()
+    fo.close()
+    return 0
+
+
+# #############################################################################查找trna-反密码子
+"""考虑trnaplot程序"""
+
+
+def search_trna_codon():
     return 0
 
 # #############################################################################处理注释信息
 
 
+# ####################################################平移并排序
 if args.line_number and args.number2 and args.ininfo:
     if args.number2 > 0:
         """平移"""
@@ -214,5 +226,44 @@ if args.line_number and args.number2 and args.ininfo:
         """排序"""
         pos_sort(tmp_path, args.outinfo)
 
+# ###################################################仅排序
 if args.ininfo and args.outinfo:
-    pos_sort(args.ininfo, args.outinfo)
+    """一些稍后用到的路径"""
+    out_dir_path = os.path.dirname(args.outinfo)
+    """tmp_info路径"""
+    tmp_outinfo_path = args.outinfo+'_tmp'
+    pos_sort(args.ininfo, tmp_outinfo_path)
+
+    """判断注释文件格式是否有问题"""  # 20220615 添加以下部分
+    with open(tmp_outinfo_path, 'r') as tmp_handle:
+        for line in tmp_handle:
+            # 换行符也是一个元素  tRNA1 \t 17-91:- \t tRNA-His \t \n
+            if line.startswith('tRNA') and len(line.split('\t')) < 5:
+                trn_flag = False
+                break
+            elif line.startswith('tRNA') and len(line.split('\t')) > 4:
+                trn_flag = True
+                break
+    """进一步处理"""
+    print(trn_flag)
+    if trn_flag == True:  # 没问题 写进输出文件
+        with open(tmp_outinfo_path, 'r') as tmp_handle, open(args.outinfo, 'w') as outinfo_handle:
+            content = tmp_handle.read()
+            outinfo_handle.write(content)
+    else:  # 有问题   修改
+        search_trna_codon()
+        """
+        #根据info.bak文件行不通,不一致
+        info_bak_path = os.path.join(out_dir_path, 'gene_annotaion.info.bak')
+        if os.path.isfile(info_bak_path):
+            info_bak_path = info_bak_path
+        else:
+            info_bak_path = os.path.abspath(input('输入info.bak路径: '))
+        with open(tmp_outinfo_path, 'r') as tmp_handle, open(info_bak_path, 'r') as bak_handle, open(args.outinfo, 'w') as outinfo_handle:
+            correct_trn_list = []
+            origin_trn_list = []
+            for line in bak_handle:
+                if line.startswith('tRNA'):
+                    correct_trn_list.append(line.strip().split()[2])
+                    print(line.strip().split()[2], line.strip().split()[3])
+        """
