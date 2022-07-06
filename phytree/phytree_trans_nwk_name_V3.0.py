@@ -67,8 +67,11 @@ if args.info:
     print("#20220518 V3.0 版本,大幅修改原代码逻辑")
 
 
-def get_id_list(id_list_lines):  # 第一二部分的子函数,判断args.idlist文件版本号以及重排获得新名字
+# 第一二部分的子函数,判断args.idlist文件版本号以及重排获得新名字
+def get_id_list_from_id_list(id_list_lines):
     # id.list # MT157619.1	Camellia petelotii var. microcarpa
+    id_list = []  # 原来树文件的id列表
+    id_new_list = []  # 新的树文件的id列表
     """对每一行id进行前处理,带上版本号"""
     for id in id_list_lines:
         content = id.strip('\n').split('\t')  # 制表符切开
@@ -110,8 +113,90 @@ def get_id_list(id_list_lines):  # 第一二部分的子函数,判断args.idlist
                 " ", "_")  # 之前id已经带有版本,这一步变为 NC_028725.1_Tyrophagus_longior
             id_list.append(id.rstrip('_'))
 
-    #print('\n', id_list, '\n', '\n', id_new_list, '\n')
     return id_list, id_new_list
+
+# 第一二部分的子函数,判断args.idlist文件版本号以及重排获得新名字
+
+
+def get_id_list_from_id_list2(id_list_lines):
+    # id.list # MT157619.1	Camellia petelotii var. microcarpa
+
+    id_dict = {}  # 原来
+    id_new_dict = {}  # 新的
+    """对每一行id进行前处理,带上版本号"""
+    for id in id_list_lines:
+        content = id.strip('\n').split('\t')  # 制表符切开
+        tmp_key = content[0].rstrip('.1').split('_')[-1]
+        id_dict[tmp_key] = ''  # 原来
+        id_new_dict[tmp_key] = ''   # 新的
+        """ #登录号,20220107修改,需要加一个判断,保证登录号都带有版本信息".1" """
+        if content[0].find('.') < 0:  # 如果不带版本信息
+            print('\n请注意{}没有版本信息! '.format(id.strip('\n')))
+            accession_0 = content[0]+'.1'
+            accession = '_'+content[0]+'.1'
+            # MT157619.1	Camellia petelotii var. microcarpa
+            id = id.replace(content[0], accession_0)
+        else:
+            accession = '_'+content[0]
+
+        """构建新的id"""
+        id_new = ''
+        for i in range(len(content)):
+            if i > 0:
+                id_new_tmp = id_new+content[i].replace(" ", "_")+'_'
+                id_new = id_new_tmp  # 仅物种名
+        id_new = id_new+accession  # 物种名+登录号(带v)
+        id_new_dict[tmp_key] = id_new
+
+        """获取或者构建原始树文件的id"""
+        if args.check1:  # 如果原始树仅有登录号(还不带v)
+            accession = accession.lstrip('_').rstrip(
+                '.1')  # 这一步将idlist里的id变为原id形式 NC_028725
+            id_dict[tmp_key] = accession
+
+        elif args.check2:  # 这一部分主要是针对贝叶斯原始树中"NC"开头,其后直接为空格的情况
+            # 上面accession为_NC_028725.1,id为MT157619.1	Camellia petelotii var. microcarpa
+            id = id.strip('\n').replace("\t", "_").replace(
+                " ", "_")  # 之前id已经带有版本,这一步变为 NC_028725.1_Tyrophagus_longior
+            # 构建出 NC 028725 1 Tyrophagus longior
+            id = id.replace('.', ' ').replace('_', ' ')
+            id_dict[tmp_key] = id
+
+        else:  # 正常情况,原始树文件没啥幺蛾子的情况
+            id = id.strip('\n').replace("\t", "_").replace(
+                " ", "_")  # 之前id已经带有版本,这一步变为 NC_028725.1_Tyrophagus_longior
+            id_dict[tmp_key] = id.rstrip('_')
+
+    return id_dict, id_new_dict
+
+
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        pass
+
+    try:
+        int(s)
+        return True
+    except ValueError:
+        pass
+
+    return False
+
+
+# 20220706 新增子函数
+def get_ori_id_list_from_tree2(tree_nwk_line):
+    ori_id_dict = {}
+    partten = r'([a-zA-Z#0-9_.]+)'
+    list_all = re.findall(partten, tree_nwk_line)
+
+    for i in list_all:
+        if not is_number(i):
+            tmp_key = i.rstrip('.1').split('_')[-1]
+            ori_id_dict[tmp_key] = i
+    return ori_id_dict
 
 
 def replace_with_str(tree_nwk_line, output_file, id_list, id_new_list):  # 3种情况下最后一步通用替换函数
@@ -123,7 +208,19 @@ def replace_with_str(tree_nwk_line, output_file, id_list, id_new_list):  # 3种�
     return 0
 
 
-# 功能3,将文件直接读取为要当参数传递的列表,等同于get_id_list(id_list_lines)的构建
+def replace_with_str2(tree_nwk_line, output_file, id_dict, id_new_dict):  # 3种情况下最后一步通用替换函数
+    tmp_count = 0
+    for i in id_new_dict.keys():
+        tmp_count += 1
+        tree_nwk_tmp = tree_nwk_line.replace(id_dict[i], id_new_dict[i])
+        tree_nwk_line = tree_nwk_tmp
+    print('{0}次替换'.format(tmp_count))
+    output_file.write(tree_nwk_line)
+    return 0
+
+# 功能3,将文件直接读取为要当参数传递的列表,等同于get_id_list_from_id_list(id_list_lines)的构建
+
+
 def get_id_list_from_file(file):
     id_list = []
     with open(file, 'r') as f:
@@ -147,16 +244,20 @@ if __name__ == '__main__':
         with open(args.idlist, 'r') as f_id, open(args.treenwk, 'r') as f_tree1, open(args.outfile, 'w') as f_out:
             tree_nwk_line = f_tree1.read()  # 直接读成一个长字符串
             id_list_lines = f_id.readlines()  # id_list_lines类型为列表
-            id_list = []  # 原来树文件的id列表
-            id_new_list = []  # 新的树文件的id列表
+
             count = []  # 计数
-            (id_list, id_new_list) = get_id_list(id_list_lines)
+            (id_dict, id_new_dict) = get_id_list_from_id_list2(id_list_lines)
+            # 20220706 被替换的id列表是从id.list文件获取的,可能与树文件中要被替换的并不一致
+            # 因此  需要一个从树文件读取列表的函数
+            ori_id_dict = get_ori_id_list_from_tree2(tree_nwk_line)
+            """
             if tree_nwk_line.startswith('#NEXUS'):
                 print("\nBayes! Try use '_' to replace '.' ")
                 for i in range(len(id_list)):
                     id_list[i] = id_list[i].replace('.', '_')
-            print('\n', id_list, '\n', '\n', id_new_list, '\n')
-            replace_with_str(tree_nwk_line, f_out, id_list, id_new_list)
+            """
+            print('\n', ori_id_dict, '\n', '\n', id_new_dict, '\n')
+            replace_with_str2(tree_nwk_line, f_out, ori_id_dict, id_new_dict)
 
     # 功能2
     if args.function2:
@@ -166,7 +267,7 @@ if __name__ == '__main__':
             id_list = []  # 原来树文件的id列表
             id_new_list = []  # 新的树文件的id列表
             count = []  # 计数
-            (id_list, id_new_list) = get_id_list(id_list_lines)
+            (id_list, id_new_list) = get_id_list_from_id_list(id_list_lines)
             print('\n', id_list, '\n', '\n', id_new_list, '\n')
             replace_with_str(tree_nwk_line, f_out, id_list, id_new_list)
 
