@@ -212,8 +212,9 @@ def replace_with_str2(tree_nwk_line, output_file, id_dict, id_new_dict):  # 3种
     tmp_count = 0
     for i in id_new_dict.keys():
         tmp_count += 1
-        tree_nwk_tmp = tree_nwk_line.replace(id_dict[i], id_new_dict[i])
-        tree_nwk_line = tree_nwk_tmp
+        if i in id_dict.keys():
+            tree_nwk_tmp = tree_nwk_line.replace(id_dict[i], id_new_dict[i])
+            tree_nwk_line = tree_nwk_tmp
     print('{0}次替换'.format(tmp_count))
     output_file.write(tree_nwk_line)
     return 0
