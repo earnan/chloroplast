@@ -21,6 +21,7 @@ import os
 import re
 import time
 
+
 parser = argparse.ArgumentParser(add_help=False, usage='\npython3   将fa序列反向互补')
 optional = parser.add_argument_group('可选项')
 required = parser.add_argument_group('必选项')
@@ -50,7 +51,7 @@ optional.add_argument('-h', '--help', action='help', help='[帮助信息]')
 args = parser.parse_args()
 
 
-def ir1(s):  # 反向互补
+def ir1(s):  # DNA反向互补
     re = s[::-1]  # 字符串反向
     c = ""  # 定义字符串c接收互补序列
     for i in re:
@@ -62,10 +63,12 @@ def ir1(s):  # 反向互补
             c = c + 'A'
         elif i == 'C':
             c = c + 'G'
+        elif i == 'N':
+            c = c + 'N'
     return c
 
 
-def ir2(s):  # 反向互补
+def ir2(s):  # RNA反向互补
     re = s[::-1]  # 字符串反向
     c = ""  # 定义字符串c接收互补序列
     for i in re:
@@ -77,32 +80,32 @@ def ir2(s):  # 反向互补
             c = c + 'A'
         elif i == 'C':
             c = c + 'G'
+        elif i == 'N':
+            c = c + 'N'
     return c
 
 
-def readfasta(input_file):  # fa将文件读取为字典及列表
+def readfasta(input_file):  # 将fa读取为字典
     seq_id = ''
     seq_dict = {}
-    seqlist = []
     for line in input_file:
         if line.startswith('>'):
             seq_id = line.strip('\n')
             seq_dict[seq_id] = ''
         else:
             seq_dict[seq_id] += line.strip('\n')
-
     return seq_dict
 
 
-def judgment_input_type(string):
+def judgment_input_type(string):  # 判断输入的是文件还是粘贴的序列
     if os.path.isfile(string):
         abs_path = os.path.abspath(string)
         abs_dir = os.path.dirname(abs_path)
         input_file = open(string, 'r')
         for line in input_file:
-            if len(line.strip('\n')):  # and (not line.startswith('>')):
+            if len(line.strip('\n')):
                 seq = line.strip('\n')
-    else:  # type(string) == type("a"):
+    else:
         seq = string
         abs_dir = os.getcwd()
     return seq, abs_dir
