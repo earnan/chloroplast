@@ -20,25 +20,38 @@ import linecache
 import os
 import re
 import time
+
 parser = argparse.ArgumentParser(
     add_help=False, usage='\
-\npython3   cp_add_gene_seq.py\n\
-位置分段,输入时要加上双引号\n\
-step1\n\
-step2\n\
-V1.0')
+\npython3   mt_add_gene_seq.py\n\
+\n\
+1.常规使用\n\
+1.1查看密码子 -i -p \n\
+\n\
+2.递归查找与存储\n\
+2.1起始子查找,-m 最大查找次数\n\
+2.2存储序列,-sn 基因名\n\
+2.3存储蛋白,-sp 基因名\n\
+\n\
+Path: E:\OneDrive\jshy信息部\Script\chloroplast\annotation\cp_add_gene_seq.py\n\
+Version: V1.0'
+)
 optional = parser.add_argument_group('可选项')
 required = parser.add_argument_group('必选项')
 optional.add_argument(
     '-i', '--infasta', metavar='[infasta]', help='输入fasta文件', type=str, default='F:/Epipactis_helleborine_FULLCP.fsa', required=False)
 optional.add_argument(
     '-p', '--posstr', metavar='[pos_str]', help="输入位置,形如'124353-124892:-;126001-126552:-'", type=str, default='68847-69098:-;69781-70072:-;71079-71149:-', required=False)
-# 124842-124892:-;126001-126552:-', required=False)
-# 124353-124892:-;126001-126552:-', required=False)
+
+
 optional.add_argument(
     '-m', '--maxnumber', metavar='[max_number]', help='最大递归查找次数', type=int, default=0, required=False)
-optional.add_argument('-f1', '--flag1', help='翻译?默认是,不运行则-c1',
+optional.add_argument('-trans', '--trans_flag', help='翻译?默认是,不运行则-c1',
                       action='store_false', required=False)
+optional.add_argument('-sn', '--nuc_file_name',
+                      metavar='[store 2 dna]', help='默认否,值为NULL,存储则输入gene名', type=str,  default='NULL', required=False)
+optional.add_argument('-sp', '--pro_file_name',
+                      metavar='[store 2 protein]', help='默认否,值为NULL,存储则输入蛋白名', type=str,  default='NULL', required=False)
 optional.add_argument('-h', '--help', action='help', help='[帮助信息]')
 args = parser.parse_args()
 
@@ -50,19 +63,6 @@ def read_file(infasta):  # 读取文件
             if not line.startswith('>'):
                 seq += line.strip('\n')
     return seq
-
-
-def format_pos(pos_str):  # 读取输入的位置为位置列表
-    pos_list = []
-    content = pos_str.split(';')
-    for ele in content:
-        if ele.split(':')[-1] == '-':
-            tmp = ele.split(':')[0]+':'+'-1'
-            pos_list.append(tmp)
-        elif ele.split(':')[-1] == '+':
-            tmp = ele.split(':')[0]+':'+'1'
-            pos_list.append(tmp)
-    return pos_list
 
 
 def ir(s):  # 反向互补
@@ -80,7 +80,36 @@ def ir(s):  # 反向互补
     return c
 
 
+def format_pos(pos_str):  # 读取输入的位置为位置列表
+    pos_list = []
+    content = pos_str.split(';')
+    for ele in content:
+        if ele.split(':')[-1] == '-':
+            tmp = ele.split(':')[0]+':'+'-1'
+            pos_list.append(tmp)
+        elif ele.split(':')[-1] == '+':
+            tmp = ele.split(':')[0]+':'+'1'
+            pos_list.append(tmp)
+    return pos_list
+
+
+####################################################################################
+
+
 def merge_sequence(pos_list, seq):  # 合并获取到的序列,顺便排一下位置顺序
+
+    # 20220728
+    """判断是否是trna,返回一个flag"""
+    flag_gene_type = 'NULL'
+    len_trna_type = 0
+    if len(pos_list) == 1:
+        start = pos_list[0].split(':')[0].split('-')[0]
+        end = pos_list[0].split(':')[0].split('-')[-1]
+        len_trna_type = abs(int(end)-int(start))+1
+        if 55 <= len_trna_type <= 100:
+            # pos_list[0].split(':')[0]   14323-1527
+            flag_gene_type = 'trna'
+
     cds_seq = ""
     if int(pos_list[0].split(':')[-1]) == -1:
         pos_list = pos_list[::-1]
@@ -100,7 +129,7 @@ def merge_sequence(pos_list, seq):  # 合并获取到的序列,顺便排一下�
             # ic('plus')
             cds_seq += seq[start_index:end_index]
             # ic(cds_seq)
-    return cds_seq, pos_list
+    return cds_seq, pos_list, flag_gene_type, len_trna_type
 
 #######################################################################################################################
 
@@ -140,12 +169,13 @@ def trans2acid(cds_seq):  # 翻译成氨基酸,返回是否正确以及第一个
                 print('\n')
             else:
                 tmp_flag = True
-                print('-----ok')
-    return tmp_flag, inter_number
-
+                print(
+                    '------------------------------------------------------------ok')
+    return tmp_flag, inter_number, acid
 
 ###################################################################################################################
 # 如果内部有终止子,则开始尝试返回新的基因位置
+
 
 def get_new_pos(tmp_pos_list, inter_number):
     # pos_list = []  # 原位置
@@ -183,17 +213,46 @@ def get_new_pos(tmp_pos_list, inter_number):
 
 
 #################################################################################################################
+# 存储获取到的dna序列或蛋白
+
+
+def storage_dna(flag_gene_type, len_trna_type, nuc_file_name, cds_seq):  # 20220722 新增子函数
+    if flag_gene_type == 'trna':  # 20220629   trna 存起来
+        print('\nType: tRNA  Len: '+str(len_trna_type)+'\n')
+        current_abs_path = os.getcwd()
+        if nuc_file_name != 'NULL':
+            with open(os.path.join(current_abs_path, nuc_file_name), 'w') as f_handle:
+                f_handle.write(cds_seq+'\n')
+
+    if flag_gene_type == 'NULL':  # 20220722   把 cds 存起来
+        #print('\nType: tRNA  Len: '+str(len_trna_type)+'\n')
+        current_abs_path = os.getcwd()
+        if nuc_file_name != 'NULL':
+            with open(os.path.join(current_abs_path, nuc_file_name), 'w') as f_handle:
+                f_handle.write(cds_seq+'\n')
+    return 0
+#################################################################################################################
 # 循环查找
 
 
-def loop_look(infasta, posstr, flag1, n, maxnumber):
+def loop_look(infasta, posstr, trans_flag, loop_count, maxnumber, nuc_file_name, pro_file_name):
+    inter_number = False  # 20220728 add  初始值为false
+
     seq = read_file(infasta)
     pos_list = format_pos(posstr)
-    cds_seq, tmp_pos_list = merge_sequence(pos_list, seq)
-    print(cds_seq)
+    cds_seq, tmp_pos_list, flag_gene_type, len_trna_type = merge_sequence(
+        pos_list, seq)
+    print('\n'+cds_seq)
 
-    if flag1:
-        tmp_flag, inter_number = trans2acid(cds_seq)
+    storage_dna(flag_gene_type, len_trna_type, nuc_file_name, cds_seq)
+
+    if trans_flag and (flag_gene_type != 'trna'):  # 翻译
+        tmp_flag, inter_number, acid = trans2acid(cds_seq)
+        current_abs_path = os.getcwd()
+        if pro_file_name != 'NULL':
+            with open(os.path.join(current_abs_path, pro_file_name+'.acid'), 'w') as f_handle:
+                f_handle.write(str(acid)+'\n')
+
         if tmp_flag == True:
             new_posstr = posstr
             print(new_posstr)
@@ -203,7 +262,8 @@ def loop_look(infasta, posstr, flag1, n, maxnumber):
             new_posstr = '124353-124892:-;126001-126552:-'
 
             if n <= maxnumber:
-                loop_look(infasta, new_posstr, flag1, n, maxnumber)
+                loop_look(infasta, new_posstr, trans_flag,
+                          loop_count, maxnumber, nuc_file_name, pro_file_name)
             else:
                 print('{}次查找未有结果,取消第{}次查找'.format(n-1, n))
     return tmp_pos_list, inter_number
@@ -218,10 +278,11 @@ if __name__ == '__main__':
     print('Start Time : {}'.format(start_time))
     #################################################################
     """
-    n = 0  # 控制递归次数,在loop_look函数外部定义全局变量
+    loop_count = 0  # 控制递归次数,在loop_look函数外部定义全局变量
     tmp_pos_list, inter_number = loop_look(
-        args.infasta, args.posstr, args.flag1, n, args.maxnumber)
-    get_new_pos(tmp_pos_list, inter_number)
+        args.infasta, args.posstr, args.trans_flag, loop_count, args.maxnumber, args.nuc_file_name, args.pro_file_name)
+    if type(inter_number) == type(1):
+        get_new_pos(tmp_pos_list, inter_number)
     """
     ###############################################################
     end_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
