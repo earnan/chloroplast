@@ -23,19 +23,19 @@ import time
 parser = argparse.ArgumentParser(
     add_help=False, usage='\
 \npython3   cp_info_rna_edit_mark.py\n\
-step1\n\
-step2\n\
+\npython3   RNA编辑的基因末尾加标识符\n\
+\n\
+0.需要-i1 -i2 -o\n\
+\n\
 V1.0')
 optional = parser.add_argument_group('可选项')
 required = parser.add_argument_group('必选项')
 optional.add_argument(
-    '-i', '--infile', metavar='[infile]', help='infile', type=str, default='E:/', required=False)
+    '-i1', '--infile1', metavar='[infile]', help='final_gene_annotaion.info1', type=str, default='final_gene_annotaion.info1', required=False)
 optional.add_argument(
-    '-o', '--outfile', metavar='[outfile]', help='outfile', type=str, default='F:/', required=False)
-optional.add_argument('-c1', '--flag1', help='run step 1?默认是,不运行则-c1',
-                      action='store_false', required=False)
-optional.add_argument('-c2', '--flag2', help='run step 2?默认否,运行则-c2 ',
-                      action='store_true', required=False)
+    '-i2', '--infile2', metavar='[infile]', help='rna编辑基因列表,一行一个', type=str, default='tmp_gene', required=False)
+optional.add_argument(
+    '-o', '--outfile', metavar='[outfile]', help='final_gene_annotaion.info', type=str, default='final_gene_annotaion.info', required=False)
 optional.add_argument('-h', '--help', action='help', help='[帮助信息]')
 args = parser.parse_args()
 
