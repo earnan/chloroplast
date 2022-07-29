@@ -255,17 +255,17 @@ def loop_look(infasta, posstr, trans_flag, loop_count, maxnumber, nuc_file_name,
 
         if tmp_flag == True:
             new_posstr = posstr
-            print(new_posstr)
+            print('正确位置: {}'.format(new_posstr))
         elif tmp_flag == False:
-            n += 1
-            print('第{}次查找中'.format(n))
+            loop_count += 1
+            print('第{}次查找中'.format(loop_count))
             new_posstr = '124353-124892:-;126001-126552:-'
 
-            if n <= maxnumber:
+            if loop_count <= maxnumber:
                 loop_look(infasta, new_posstr, trans_flag,
                           loop_count, maxnumber, nuc_file_name, pro_file_name)
             else:
-                print('{}次查找未有结果,取消第{}次查找'.format(n-1, n))
+                print('{}次查找未有结果,取消第{}次查找'.format(loop_count-1, loop_count))
     return tmp_pos_list, inter_number
 
 
