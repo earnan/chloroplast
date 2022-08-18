@@ -71,6 +71,7 @@ file_list = []
 dir_list = []
 indir_path = args.indir
 dir_list = os.listdir(indir_path)
+dir_list.sort()
 
 with open(args.outfile, 'a+') as outfile_handle:
     outfile_handle.write('Ref:' + '\n' + '\t' + 'Gbk:' + '\n')  # 输出文件的第一 二行格式
