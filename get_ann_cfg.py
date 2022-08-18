@@ -56,7 +56,7 @@ Version: 1.0\n\
 optional = parser.add_argument_group('可选项')
 required = parser.add_argument_group('必选项')
 optional.add_argument(
-    '-i', '--indir', metavar='[indir]', help='indir', type=str, default='E:\Examples\get_ann_cfg', required=False)
+    '-i', '--indir', metavar='[indir]', help='indir', type=str, default='analysis/assembly', required=False)  # default='E:\Examples\get_ann_cfg', required=False)
 optional.add_argument(
     '-o', '--outfile', metavar='[outfile]', help='outfile', type=str, default='ann.cfg', required=False)
 optional.add_argument('-c1', '--flag1', help='run step 1?默认是,不运行则-c1',
@@ -76,4 +76,6 @@ with open(args.outfile, 'a+') as outfile_handle:
     outfile_handle.write('Ref:' + '\n' + '\t' + 'Gbk:' + '\n')  # 输出文件的第一 二行格式
     for i in dir_list:
         outfile_handle.write('\t\t{} :\t\n'.format(i))
-print('done')
+
+os.system('cat ann.cfg')
+print('Done')
