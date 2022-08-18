@@ -58,7 +58,7 @@ required = parser.add_argument_group('必选项')
 optional.add_argument(
     '-i', '--indir', metavar='[indir]', help='indir', type=str, default='E:\Examples\get_ann_cfg', required=False)
 optional.add_argument(
-    '-o', '--outfile', metavar='[outfile]', help='outfile', type=str, default='F:/ann.cfg', required=False)
+    '-o', '--outfile', metavar='[outfile]', help='outfile', type=str, default='ann.cfg', required=False)
 optional.add_argument('-c1', '--flag1', help='run step 1?默认是,不运行则-c1',
                       action='store_false', required=False)
 optional.add_argument('-c2', '--flag2', help='run step 2?默认否,运行则-c2 ',
