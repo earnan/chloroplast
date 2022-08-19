@@ -123,9 +123,16 @@ def get_complete_note(seq_record):  # 获取整个完整基因组ID
         # if seq_record.description.find('chloroplast'):#有bug,用str格式化后就没问题了
         # 20220627 if str(seq_record.description).find('chloroplast') -1也成立,判断时一定要以False True为准
         # or seq_record.description.split(',')[-2].split()[-1] == 'chloroplast' or seq_record.description.split(',')[-2].split()[-1] == 'plastid':
-        if str(seq_record.description).find('chloroplast') > 0 or seq_record.description.split(',')[-2].split()[-1] == 'chloroplast' or seq_record.description.split(',')[-2].split()[-1] == 'plastid':
-            seq_id = seq_record.description.split(
-                'chloroplast')[0].replace(' ', '_').rstrip('_')
+        if str(seq_record.description).find('chloroplast') > 0 \
+            or str(seq_record.description).find('plastid') > 0 \
+                or seq_record.description.split(',')[-2].split()[-1] == 'chloroplast' \
+                or seq_record.description.split(',')[-2].split()[-1] == 'plastid':  # gbk 属于 叶绿体
+            if str(seq_record.description).find('chloroplast') > 0:  # 20220819 根据不同关键词分割
+                seq_id = seq_record.description.split(
+                    'chloroplast')[0].replace(' ', '_').rstrip('_')
+            elif str(seq_record.description).find('plastid') > 0:
+                seq_id = seq_record.description.split(
+                    'plastid')[0].replace(' ', '_').rstrip('_')
             name = seq_record.name
             if seq_id == name:
                 seq_id = seq_id
@@ -329,7 +336,7 @@ if __name__ == '__main__':
         dict_file_cds_count[file_name] = count  # 每个文件中cds计数
         """写入文件"""
         with open((args.output+os.sep+seq_id+'.fasta'), 'wb') as f_complete, \
-                open((args.output+os.sep+file_name.rstrip('.gbk')+'_cds.fasta'), 'wb') as f_cds:  # , \
+                open((args.output+os.sep+'cds_'+file_name.rstrip('.gbk')+'.fasta'), 'wb') as f_cds:  # , \
             # open((args.output+os.sep+'log'), 'a+') as f_log:
             f_cds.write(cds_fasta.encode())
             f_complete.write(complete_fasta.encode())
