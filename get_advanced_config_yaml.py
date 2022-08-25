@@ -56,12 +56,67 @@ Version: 1.0\n\
 optional = parser.add_argument_group('可选项')
 required = parser.add_argument_group('必选项')
 optional.add_argument(
-    '-i', '--instr', metavar='[instr]', help='instr', type=str, default='E:/', required=False)
+    '-i1', '--indir1', metavar='[ass dir]', help='analysis/ or sample/', type=str, default='E:/', required=False)
 optional.add_argument(
-    '-o', '--outfile', metavar='[outfile]', help='outfile', type=str, default='F:/', required=False)
+    '-i2', '--indir2', metavar='[ref dir]', help='ref_adv/', type=str, default='E:/', required=False)
+optional.add_argument(
+    '-o', '--outdir', metavar='[out dir]', help='default indir', type=str, default='F:/', required=False)
 optional.add_argument('-c1', '--flag1', help='run step 1?默认是,不运行则-c1',
                       action='store_false', required=False)
 optional.add_argument('-c2', '--flag2', help='run step 2?默认否,运行则-c2 ',
                       action='store_true', required=False)
 optional.add_argument('-h', '--help', action='help', help='[帮助信息]')
 args = parser.parse_args()
+
+# 传入参数
+ass_dir_path = args.indir1  # 组装
+ref_dir_path = args.indir2  # 参考
+out_dir_path = args.outdir  # 输出
+ref_gbk_path = os.path.join(ref_dir_path, 'gbk')
+ref_genome_path = os.path.join(ref_dir_path, 'fasta')
+# 初始化
+ass_gbk_list = []
+ass_genome_list = []
+ref_gbk_list = []
+ref_genome_list = []
+# 列表赋值
+ref_gbk_list = os.listdir(ref_gbk_path)
+ref_gbk_list.sort()
+
+ref_genome_list = os.listdir(ref_genome_path)
+ref_genome_list.sort()
+'''
+ass_gbk_list = [1, 2]
+ass_genome_list = [1, 2]
+ref_gbk_list = [1, 2]
+ref_genome_list = [1, 2]
+'''
+
+outfile_path = args.outdir+'test.yaml'
+with open(outfile_path, 'a+') as outfile_handle:
+    outfile_handle.write('Assembly:\n\tGbk:\n')
+    for i in ass_gbk_list:
+        outfile_handle.write('\t\t- {}\n'.format(i))
+
+    outfile_handle.write('\tGenome:\n')
+    for i in ass_genome_list:
+        outfile_handle.write('\t\t- {}\n'.format(i))
+
+    outfile_handle.write('Ref:\n\tGbk:\n')
+    for i in ref_gbk_list:
+        outfile_handle.write('\t\t- {}\n'.format(i))
+
+    outfile_handle.write('\tGenome:\n')
+    for i in ref_genome_list:
+        outfile_handle.write('\t\t- {}\n'.format(i))
+
+    outfile_handle.write('Library:\n\tIR  : {}\n'.format(i))
+    outfile_handle.write('\tGene_anno:\n\t\t- {}\n'.format(i))
+    outfile_handle.write('\n')
+    outfile_handle.write(
+        "#Fill manully. Root, if not defined ,fill 0. if defined,fill id. eq 'id1, id2'.")
+    outfile_handle.write(
+        '\tPhytree:\n\t\tFa  : {}\n\t\tRoot  : 0\n'.format('null'))
+
+os.system("cat test.yaml")
+print('Done')
