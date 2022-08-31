@@ -7,7 +7,7 @@
 #    Description:   phytree_trans_nwk_name_V3.0.py
 #        Version:   3.0
 #           Time:   2022/05/18 15:33:22
-#  Last Modified:   2022/05/18 15:33:22
+#  Last Modified:   2022/08/30 18:00:07
 #        Contact:   hi@arcsona.cn
 #        License:   Copyright (C) 2022
 #
@@ -18,53 +18,75 @@ from Bio.Seq import Seq
 import argparse
 import linecache
 import os
+#import pretty_errors
 import re
+import sys
 import time
-
+#import copy
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 parser = argparse.ArgumentParser(
-    add_help=False, usage='\npython3 修改nwk树文件的物种名称')
+    add_help=False, usage='\n\
+\n\
+##########################################################\n\
+#\n\
+#       Filename:   phytree_trans_nwk_name_V3.0.py\n\
+#         Author:   yujie\n\
+#    Description:   phytree_trans_nwk_name_V3.0.py\n\
+#        Version:   3.0\n\
+#           Time:   2022/05/18 15:33:22\n\
+#  Last Modified:   2022/08/30 18:00:46\n\
+#        Contact:   hi@arcsona.cn\n\
+#        License:   Copyright (C) 2022\n\
+#\n\
+##########################################################\n\
+\n\
+\npython3   phytree_trans_nwk_name_V3.0.py\n\
+Function:\n\
+1.方法1 -f1 -1  [id.list]   -2  [sample.genome.nwk] -3  [out nwk]\n\
+2.方法2 -f2 -1  [id.list]   -2  [sample.genome.nwk] -3  [out nwk]   -c1/-c2\n\
+    2.1原始树只有登录号(无版本) -c1\n\
+    2.2NC后为空格的情况,适用于bayes -c2\n\
+3.方法3 -f3 -id1    [初始ID文件]    -id2    [修改后的id文件]    -2  [sample.genome.nwk] -3  [out nwk]\n\
+\n\
+##########################################################\n\
+Path: E:\OneDrive\jshy信息部\Script\chloroplast\phytree\phytree_trans_nwk_name_V3.0.py\n\
+Path: /share/nas1/yuj/script/chloroplast/phytree/phytree_trans_nwk_name_V3.0.py\n\
+Version: 3.0\n\
+##########################################################\n\
+'
+)
 optional = parser.add_argument_group('可选项')
 required = parser.add_argument_group('必选项')
 
 optional.add_argument(
-    '-f1', '--function1', help="没有幺蛾子,运行时-f1,输入-1 -2 -3", action='store_true', required=False)
+    '-f1', '--function1', action='store_true', required=False)
 optional.add_argument(
-    '-1', '--idlist', metavar='[file]', type=str, help='输入id.list',  required=False)  # id.list文件中登录号一列 \t 物种名占两列
+    '-1', '--idlist', metavar='[id.list]', type=str,  required=False)  # id.list文件中登录号一列 \t 物种名占两列
 optional.add_argument(
-    '-2', '--treenwk', metavar='[file]', type=str, help='默认sample.genome.nwk',  default='sample.genome.nwk',   required=False)
+    '-2', '--treenwk', metavar='[sample.genome.nwk]', type=str,  default='sample.genome.nwk',   required=False)
 optional.add_argument(
-    '-3', '--outfile', metavar='[file]', type=str, help='默认phytree.nwk',  default='phytree.nwk', required=False)
+    '-3', '--outfile', metavar='[out nwk]', type=str,   default='phytree.nwk', required=False)
 
-
 optional.add_argument(
-    '-f2', '--function2', help="有幺蛾子,运行时-f2,输入-1 -2 -3 -c1/-c2", action='store_true', required=False)
+    '-f2', '--function2', action='store_true', required=False)
 optional.add_argument(
     '-c1', '--check1', help="原始树只有登录号(无版本),使用则-c1", action='store_true', required=False)
 optional.add_argument(
     '-c2', '--check2', help="NC后为空格的情况,适用于bayes,使用时-c2", action='store_true', required=False)
 
-
 optional.add_argument(
-    '-f3', '--function3', help="前两种用不了就很烦,运行时-f3,输入-id1 -id2 -2 -3", action='store_true', required=False)
+    '-f3', '--function3', action='store_true', required=False)
 optional.add_argument(
-    '-id1', '--idfile1', metavar='[初始ID文件]', type=str, help="输入原id",   required=False)
+    '-id1', '--idfile1', metavar='[初始ID文件]', type=str,  required=False)
 optional.add_argument(
-    '-id2', '--idfile2', metavar='[修改后的id文件]', type=str, help="输入新id",   required=False)
-
+    '-id2', '--idfile2', metavar='[修改后的id文件]', type=str,   required=False)
 
 optional.add_argument(
     '-i', '--info', help="完整的帮助信息,运行则-i", action='store_true', required=False)
 optional.add_argument('-h', '--help', action='help', help='帮助信息')
 args = parser.parse_args()
-if args.info:
-    print("\n以下是帮助信息: ")
-    print("适用于最大似然法及贝叶斯法的结果修改")
-    print("登录号(带版本)+物种  改为  物种+登录号(带版本)")
-    print("登录号(不带版本)  改为  物种+登录号(带版本)")
-    print("#20220107修改,需要加一个判断,保证登录号都带有版本信息'.1'")
-    print("#20220124增加一个读取文件为名称列表的子函数,程序有修改\n新增参数id1/id2")
-    print("         简写名字 替换为 属名+种名+品系 \n")
-    print("#20220518 V3.0 版本,大幅修改原代码逻辑")
 
 
 # 第一二部分的子函数,判断args.idlist文件版本号以及重排获得新名字
@@ -233,6 +255,17 @@ def get_id_list_from_file(file):
 
 
 if __name__ == '__main__':
+
+    if args.info:
+        print("\n以下是帮助信息: ")
+        print("适用于最大似然法及贝叶斯法的结果修改")
+        print("\t登录号(带版本)+物种 -> 物种+登录号(带版本)")
+        print("\t登录号(不带版本) -> 物种+登录号(带版本)")
+        print("#20220107修改,需要加一个判断,保证登录号都带有版本信息'.1'")
+        print("#20220124增加一个读取文件为名称列表的子函数,程序有修改\n\t新增参数id1/id2\n\t简写名字 -> 属名+种名+品系")
+        print("#20220518 V3.0 版本,大幅修改原代码逻辑")
+        print("#20220830 V3.1 版本,更新交互信息")
+        sys.exit(0)  # 正常退出
     #################################################################
     # 格式化成2016-03-20 11: 45: 39形式
     begin_time = time.time()
