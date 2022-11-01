@@ -64,11 +64,11 @@ Version: V2.0'
 optional = parser.add_argument_group('可选项')
 required = parser.add_argument_group('必选项')
 optional.add_argument(
-    '-i', '--infasta', metavar='[infasta]', help='输入fasta文件', type=str, default='F:/Epipactis_helleborine_FULLCP.fsa', required=False)
+    '-i', '--infasta', metavar='[infasta]', help='输入fasta文件', type=str, default='F:\\5070\\Corynandra_viscosa_FULLCP.fsa', required=False)
 optional.add_argument(
-    '-p', '--posstr', metavar='[pos_str]', help="输入位置,形如'124353-124892:-;126001-126552:-'", type=str, default='68847-69098:-;69781-70072:-;71079-71149:-', required=False)
-
-
+    '-p', '--posstr', metavar='[pos_str]', help="输入位置,形如'124353-124892:-;126001-126552:-'", type=str, default='72649-72876:-;73447-73737:-;74668-74724:-', required=False)
+optional.add_argument('-df', '--direction_flag',
+                      help='起始子查找方向,默认true向前(序列变长),向后则-df', action='store_false', required=False)
 optional.add_argument(
     '-m', '--maxnumber', metavar='[max_number]', help='最大递归查找次数,默认0,假查找', type=int, default=0, required=False)
 optional.add_argument('-trans', '--trans_flag',
@@ -87,7 +87,7 @@ args = parser.parse_args()
 if args.info:
     print('\n更新日志:')
     print('\t20221101  添加终止子错误时的查找 更新一些提示信息')
-
+    print('\t20221101 17:44 添加叶绿体起始子查找方向参数 默认向前查找（plus）')
     print('\n')
     sys.exit(0)
 
@@ -312,8 +312,8 @@ def storage_dna(flag_gene_type, len_trna_type, nuc_file_name, cds_seq):  # 存�
 #################################################################################################################
 
 
-# 循环查找
-def loop_look(infasta, posstr, trans_flag, loop_count, maxnumber, nuc_file_name, pro_file_name):
+# 循环查找  direction_flag
+def loop_look(direction_flag, infasta, posstr, trans_flag, loop_count, maxnumber, nuc_file_name, pro_file_name):
 
     start_codon_list = ['TTG', 'CTG', 'ATT',
                         'ATC', 'ATA', 'ATG', 'GTG']  # 没有rna编辑
@@ -371,53 +371,78 @@ def loop_look(infasta, posstr, trans_flag, loop_count, maxnumber, nuc_file_name,
             if maxnumber > 0:
                 print(
                     '\n[START CONDON]Start search......Times:{} / Total times:{}'.format(loop_count, len(loop_count_flag)))
-            cds_seq = cds_seq[3:]  # 已经判断起始错误了,因此直接把序列剪掉前面3个碱基
 
-            # ##############################################################
-            # 定义为第二层if else
-            if cds_seq[0:3] not in start_codon_list and maxnumber != 0:  # 20220805  如果为假查找，就不进行下一步了
-                start_flag = False
+            '''20221101叶绿体
+            分向前找(flase)  向后找(args.direction_flag=true)
+            '''
+            # #20221101------------------------------------------------------------------------------------------------------------
+            if direction_flag == False:
+                '''起始向后找 长度减小'''
+                cds_seq = cds_seq[3:]  # 已经判断起始错误了,因此直接把序列剪掉前面3个碱基
+                # ##############################################################
+                # 定义为第二层if else
+                # 20220805  如果为假查找，就不进行下一步了
+                if cds_seq[0:3] not in start_codon_list and maxnumber != 0:
+                    start_flag = False
+                    if maxnumber > 0:
+                        print('old pos:{}'.format(tmp_pos_list))
+                        print('old pos:{}'.format(posstr))
+                    # 20220808 以下自动返回位置，也就是开头往后挪6bp
+                    if posstr.split(':')[-1] == '+':
+                        new_pos_str = posstr.replace(posstr.split(
+                            '-')[0], str(int(posstr.split('-')[0])+6))
+                    elif posstr.split(':')[-1] == '-':
+                        new_pos_str = posstr.replace(re.findall(
+                            r'\d+', posstr)[-1], str(int(re.findall(
+                                r'\d+', posstr)[-1])-6))
+
+                    if loop_count <= maxnumber:
+                        loop_look(direction_flag, infasta, new_pos_str, trans_flag,
+                                  loop_count, maxnumber, nuc_file_name, pro_file_name)
+                elif cds_seq[0:3] in start_codon_list:
+                    start_flag = True
+                    print('\n'+cds_seq)
+                    # 20220808 以下自动返回正确位置，也就是开头往后挪3bp
+                    if posstr.split(':')[-1] == '+':
+                        new_pos_str = posstr.replace(posstr.split(
+                            '-')[0], str(int(posstr.split('-')[0])+3))
+                    elif posstr.split(':')[-1] == '-':
+                        new_pos_str = posstr.replace(re.findall(
+                            r'\d+', posstr)[-1], str(int(re.findall(
+                                r'\d+', posstr)[-1])-3))
+                    tmp_flag, inter_number, acid = trans2acid(cds_seq)
+
+                    if maxnumber > 0:
+                        if tmp_flag != 1:
+                            print('The correct starting codon was found after {} searches / Total times: {}'.format(
+                                len(loop_count_flag1), len(loop_count_flag)))
+                    if tmp_flag == 0:  # 20221020 其他地方还会出错,所以要再次检查
+                        print('Correct Position: [{}]'.format(new_pos_str))
+                        if pro_file_name != 'NULL':
+                            with open(os.path.join(current_abs_path, pro_file_name+'.acid'), 'w') as f_handle:
+                                f_handle.write(str(acid)+'\n')
+                    else:  # 还没完全找对
+                        if loop_count <= maxnumber:
+                            loop_look(direction_flag, infasta, new_pos_str, trans_flag, loop_count,
+                                      maxnumber, nuc_file_name, pro_file_name)
+
+            elif direction_flag == True:
+                '''起始向前找 长度增加'''
                 if maxnumber > 0:
                     print('old pos:{}'.format(tmp_pos_list))
                     print('old pos:{}'.format(posstr))
-                # 20220808 以下自动返回位置，也就是开头往后挪6bp
-                if posstr.split(':')[-1] == '+':
-                    new_pos_str = posstr.replace(posstr.split(
-                        '-')[0], str(int(posstr.split('-')[0])+6))
-                elif posstr.split(':')[-1] == '-':
-                    new_pos_str = posstr.replace(re.findall(
-                        r'\d+', posstr)[-1], str(int(re.findall(
-                            r'\d+', posstr)[-1])-6))
+                # 20221101 以下自动返回位置，也就是开头往前挪3bp
+                    if posstr.split(':')[-1] == '+':
+                        new_pos_str = posstr.replace(posstr.split(
+                            '-')[0], str(int(posstr.split('-')[0])-3))
+                    elif posstr.split(':')[-1] == '-':
+                        new_pos_str = posstr.replace(re.findall(
+                            r'\d+', posstr)[-1], str(int(re.findall(
+                                r'\d+', posstr)[-1])+3))
 
-                if loop_count <= maxnumber:
-                    loop_look(infasta, new_pos_str, trans_flag,
-                              loop_count, maxnumber, nuc_file_name, pro_file_name)
-            elif cds_seq[0:3] in start_codon_list:
-                start_flag = True
-                print('\n'+cds_seq)
-                # 20220808 以下自动返回正确位置，也就是开头往后挪3bp
-                if posstr.split(':')[-1] == '+':
-                    new_pos_str = posstr.replace(posstr.split(
-                        '-')[0], str(int(posstr.split('-')[0])+3))
-                elif posstr.split(':')[-1] == '-':
-                    new_pos_str = posstr.replace(re.findall(
-                        r'\d+', posstr)[-1], str(int(re.findall(
-                            r'\d+', posstr)[-1])-3))
-                tmp_flag, inter_number, acid = trans2acid(cds_seq)
-
-                if maxnumber > 0:
-                    if tmp_flag != 1:
-                        print('The correct starting codon was found after {} searches / Total times: {}'.format(
-                            len(loop_count_flag1), len(loop_count_flag)))
-                if tmp_flag == 0:  # 20221020 其他地方还会出错,所以要再次检查
-                    print('Correct Position: [{}]'.format(new_pos_str))
-                    if pro_file_name != 'NULL':
-                        with open(os.path.join(current_abs_path, pro_file_name+'.acid'), 'w') as f_handle:
-                            f_handle.write(str(acid)+'\n')
-                else:  # 还没完全找对
                     if loop_count <= maxnumber:
-                        loop_look(infasta, new_pos_str, trans_flag, loop_count,
-                                  maxnumber, nuc_file_name, pro_file_name)
+                        loop_look(direction_flag, infasta, new_pos_str, trans_flag,
+                                  loop_count, maxnumber, nuc_file_name, pro_file_name)
         # ################################################################################################################################
         # 第一层if else
             """考虑细分情况 20221020考虑终止子错误的查找"""
@@ -463,7 +488,7 @@ def loop_look(infasta, posstr, trans_flag, loop_count, maxnumber, nuc_file_name,
                             r'\d+', posstr)[0])-1))
 
             if loop_count <= maxnumber:
-                loop_look(infasta, new_pos_str, trans_flag,
+                loop_look(direction_flag, infasta, new_pos_str, trans_flag,
                           loop_count, maxnumber, nuc_file_name, pro_file_name)
 
         else:
@@ -474,7 +499,7 @@ def loop_look(infasta, posstr, trans_flag, loop_count, maxnumber, nuc_file_name,
             new_pos_str = '124353-124892:-;126001-126552:-'
 
             if loop_count <= maxnumber:
-                loop_look(infasta, new_pos_str, trans_flag,
+                loop_look(direction_flag, infasta, new_pos_str, trans_flag,
                           loop_count, maxnumber, nuc_file_name, pro_file_name)
             else:
                 print('{}次查找未有结果,取消第{}次查找'.format(loop_count-1, loop_count))
@@ -495,8 +520,8 @@ if __name__ == '__main__':
     loop_count_flag1 = []
     loop_count_flag3 = []
     loop_count_flag = []
-    tmp_pos_list, inter_number = loop_look(
-        args.infasta, args.posstr, args.trans_flag, loop_count, args.maxnumber, args.nuc_file_name, args.pro_file_name)
+    tmp_pos_list, inter_number = loop_look(args.direction_flag,
+                                           args.infasta, args.posstr, args.trans_flag, loop_count, args.maxnumber, args.nuc_file_name, args.pro_file_name)
     if type(inter_number) == type(1):
         get_current_first_end_pos(tmp_pos_list, inter_number)
     """
