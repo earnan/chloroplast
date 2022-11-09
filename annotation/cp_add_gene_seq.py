@@ -7,12 +7,12 @@
 #    Description:   cp_add_gene_seq.py
 #        Version:   2.0
 #           Time:   2022/04/19 13:43:58
-#  Last Modified:   2022/11/01 13:43:58
+#  Last Modified:   2022/11/02 16:43:58
 #        Contact:   hi@arcsona.cn
 #        License:   GNU General Public License v3.0
 #
 ##########################################################
-from Bio import SeqIO
+#from Bio import SeqIO
 from Bio.Seq import Seq
 # from humre import *  # 正则
 # from icecream import ic  # 打印
@@ -38,7 +38,7 @@ parser = argparse.ArgumentParser(
 #    Description:   cp_add_gene_seq.py\n\
 #        Version:   2.0\n\
 #           Time:   2022/04/19 13:43:58\n\
-#  Last Modified:   2022/11/01 13:43:58\n\
+#  Last Modified:   2022/11/02 16:43:58\n\
 #        Contact:   hi@arcsona.cn\n\
 #        License:   GNU General Public License v3.0\n\
 #\n\
@@ -50,14 +50,14 @@ parser = argparse.ArgumentParser(
 1.1查看密码子 -i -p \n\
 1.2序列被误判为trna,强制翻译使用 -f \n\
 \n\
-2.递归查找与存储\n\
+2.递归查找\n\
 2.1起始子/终止子自动查找,-m 最大查找次数\n\
 \n\
 3.存储为文件\n\
 3.1存储序列,-sn 基因名\n\
 3.2存储蛋白,-sp 基因名\n\
 \n\
-Path: E:\OneDrive\jshy信息部\Script\chloroplast\annotation\cp_add_gene_seq.py\n\
+Path: E:\\OneDrive\\jshy信息部\\Script\\chloroplast\\annotation\\cp_add_gene_seq.py\n\
 Path: /share/nas1/yuj/script/chloroplast/annotation/cp_add_gene_seq.py\n\
 Version: V2.0'
 )
@@ -87,8 +87,8 @@ args = parser.parse_args()
 if args.info:
     print('\n更新日志:')
     print('\t20221101  添加终止子错误时的查找 更新一些提示信息')
-    print('\t20221101 17:44 添加叶绿体起始子查找方向参数 默认向前查找（plus）')
-    print('\t20221102 14:34 添加特定条件下内部有终止子的查找，待完善（for 5070项目rpl16）')
+    print('\t20221101 17:44 添加叶绿体起始子查找方向参数 默认向前查找(plus)')
+    print('\t20221102 17:34 添加特定条件下内部有终止子的查找,待完善(for 5070项目rpl16/ndhI)')
     print('\n')
     sys.exit(0)
 
@@ -437,6 +437,12 @@ def loop_look(direction_flag, infasta, pos_str, trans_flag, loop_count, maxnumbe
             # seq_check_flag, first_stop_codon_index_in_protein_seq, protein_seq
 
             # trans2protein_seq(cds_seq)函数对条件限定过了，因此以下代码条件比较宽松
+            '''
+            5070项目rpl16
+            假设有俩终止子
+            假设没有内含子
+            假设第二段比第一段长
+            '''
             if protein_seq.count('*') == 2:
                 len_protein_seq_1, len_protein_seq_2 = get_current_first_end_pos(
                     sorted_pos_list, first_stop_codon_index_in_protein_seq)
@@ -448,6 +454,26 @@ def loop_look(direction_flag, infasta, pos_str, trans_flag, loop_count, maxnumbe
                         modified_pos_str = pos_str.replace(re.findall(
                             r'\d+', pos_str)[-1], str(int(re.findall(
                                 r'\d+', pos_str)[-1])-len_protein_seq_1))
+                    if loop_count <= maxnumber:
+                        loop_look(direction_flag, infasta, modified_pos_str, trans_flag,
+                                  loop_count, maxnumber, nuc_file_name, pro_file_name)
+                '''
+                5070项目ndhI
+                假设有1终止子
+                假设没有内含子
+                第一段比第二段长
+                '''
+            elif protein_seq.count('*') == 1:
+                len_protein_seq_1, len_protein_seq_2 = get_current_first_end_pos(
+                    sorted_pos_list, first_stop_codon_index_in_protein_seq)
+                if (len_protein_seq_2 < len_protein_seq_1) and len(sorted_pos_list) == 1:
+                    if pos_str.split(':')[-1] == '+':  # 改末尾
+                        modified_pos_str = pos_str.replace(pos_str.split(
+                            '-')[-1], str(int(pos_str.split('-')[-1])-len_protein_seq_2))
+                    elif pos_str.split(':')[-1] == '-':  # 改开头
+                        modified_pos_str = pos_str.replace(re.findall(
+                            r'\d+', pos_str)[0], str(int(re.findall(
+                                r'\d+', pos_str)[0])+len_protein_seq_2))
                     if loop_count <= maxnumber:
                         loop_look(direction_flag, infasta, modified_pos_str, trans_flag,
                                   loop_count, maxnumber, nuc_file_name, pro_file_name)
@@ -512,6 +538,7 @@ def get_current_first_end_pos(sorted_pos_list, first_stop_codon_index_in_protein
             print('Stop codon lie in [{}]'.format(sorted_pos_list[1]))
     return inter_pos, remaining_bp  # 前半截，后半截
 
+#################################################################################################################
 
 if __name__ == '__main__':
 
@@ -522,7 +549,7 @@ if __name__ == '__main__':
     sorted_pos_list, first_stop_codon_index_in_protein_seq, \
         modified_pos_str, seq_check_flag = loop_look(args.direction_flag,
                                                      args.infasta, args.pos_str, args.trans_flag, loop_count, args.maxnumber, args.nuc_file_name, args.pro_file_name)
-    if seq_check_flag != 0 and args.maxnumber != 0:
+    if seq_check_flag != 0 and args.maxnumber != 0 and seq_check_flag != 3:
         direction_flag = False
         sorted_pos_list, first_stop_codon_index_in_protein_seq, \
             modified_pos_str, seq_check_flag = loop_look(direction_flag,
