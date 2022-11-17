@@ -87,8 +87,9 @@ args = parser.parse_args()
 if args.info:
     print('\n更新日志:')
     print('\t20221101  添加终止子错误时的查找 更新一些提示信息')
-    print('\t20221101 17:44 添加叶绿体起始子查找方向参数 默认向前查找(plus)')
-    print('\t20221102 17:34 添加特定条件下内部有终止子的查找,待完善(for 5070项目rpl16/ndhI)')
+    print('\t20221101 17:44  添加叶绿体起始子查找方向参数 默认向前查找(plus)')
+    print('\t20221102 17:34  添加特定条件下内部有终止子的查找,待完善(for 5070项目rpl16/ndhI)')
+    print('\t20221117  精简起始子向后查找部分代码')
     print('\n')
     sys.exit(0)
 
@@ -319,14 +320,12 @@ def loop_look(direction_flag, infasta, pos_str, trans_flag, loop_count, maxnumbe
             '''
             if direction_flag == False:
                 '''起始向后找 长度减小'''
-                cds_seq = cds_seq[3:]  # 已经判断起始错误了,因此直接把序列剪掉前面3个碱基
                 # ##############################################################
                 # 定义为第二层if else
                 # 20220805  如果为假查找，就不进行下一步了
-                if cds_seq[0:3] not in start_codon_list and maxnumber != 0:
-                    if maxnumber > 0:
-                        print('old pos:{}'.format(sorted_pos_list))
-                        print('old pos:{}'.format(pos_str))
+                if cds_seq[3:6] not in start_codon_list and maxnumber > 0:
+                    print('old pos:{}'.format(sorted_pos_list))
+                    print('old pos:{}'.format(pos_str))
                     # 20220808 以下自动返回位置，也就是开头往后挪6bp
                     if pos_str.split(':')[-1] == '+':
                         modified_pos_str = pos_str.replace(pos_str.split(
@@ -339,7 +338,7 @@ def loop_look(direction_flag, infasta, pos_str, trans_flag, loop_count, maxnumbe
                     if loop_count <= maxnumber:
                         loop_look(direction_flag, infasta, modified_pos_str, trans_flag,
                                   loop_count, maxnumber, nuc_file_name, pro_file_name)
-                elif cds_seq[0:3] in start_codon_list:
+                elif cds_seq[3:6] in start_codon_list:
                     print('\n'+cds_seq)
                     # 20220808 以下自动返回正确位置，也就是开头往后挪3bp
                     if pos_str.split(':')[-1] == '+':
@@ -539,6 +538,7 @@ def get_current_first_end_pos(sorted_pos_list, first_stop_codon_index_in_protein
     return inter_pos, remaining_bp  # 前半截，后半截
 
 #################################################################################################################
+
 
 if __name__ == '__main__':
 
