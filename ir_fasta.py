@@ -5,49 +5,54 @@
 #       Filename:   ir_fasta.py
 #         Author:   yujie
 #    Description:   ir_fasta.py
-#        Version:   1.0
+#        Version:   2.0
 #           Time:   2022/04/18 17:22:12
-#  Last Modified:   2022/04/18 17:22:12
+#  Last Modified:   2022/12/07 10:27:03
 #        Contact:   hi@arcsona.cn
-#        License:   Copyright (C) 2022
+#        License:   GNU General Public License v3.0
 #
 ##########################################################
-from Bio import SeqIO
-from Bio.Seq import Seq
-#from icecream import ic
-import argparse
-import linecache
-import os
-import re
-import time
+# from Bio import SeqIO
+# from Bio.Seq import Seq
+# from humre import *  # 正则
+# from icecream import ic  # 打印
+import argparse  # 命令行
+import linecache  # 大文件行读取
+import os  # 目录路径
+# import pretty_errors  # 错误提示
+import re  # 正则
+import sys
+# import time
+# import copy  # 深度拷贝
+# import pandas as pd
+# import numpy as np
+# import matplotlib.pyplot as plt
 
+parser = argparse.ArgumentParser()  # 括号里不加东西，程序会自动补出帮助信息
+# 自定的必选参数，要加上required=True才是真正的必选项
+required = parser.add_argument_group('required arguments')
+optional1 = parser.add_argument_group(
+    'optional arguments group 1')  # 自定的可选参数，默认状态都是可选
+optional2 = parser.add_argument_group('optional arguments group 2')
 
-parser = argparse.ArgumentParser(add_help=False, usage='\npython3   将fa序列反向互补')
-optional = parser.add_argument_group('可选项')
-required = parser.add_argument_group('必选项')
-optional.add_argument('-i', '--input',
-                      metavar='[xxx.fasta]', help='输入fa文件', type=str, required=False)
-optional.add_argument(
-    '-l', '--lenth', metavar='[基因序列长度]', type=bool, help="有-i 参数即可输出", default='1', required=False)
-optional.add_argument('-gc', '--gccount', help='GC?默认否,运行则-gc ',
-                      action='store_true', required=False)
+# help='input fasta file or seq string',
+required.add_argument(
+    '-i', '--input', metavar='.fasta/seq', type=str, required=True)
+# help='output  reverse-complementary fasta file',
+optional1.add_argument('-o', '--output', metavar='ir.fasta', type=str)
+optional1.add_argument(
+    '-l', '--lenth',  help='display sequence length', action='store_false')
+optional1.add_argument(
+    '-gc', '--gccount', help='display sequence gc_count', action='store_true')
 
-optional.add_argument('-s1', '--seq1',
-                      metavar='[ATG→CAT]', help='DNA反向互补', type=str, required=False)
-optional.add_argument('-s2', '--seq2',
-                      metavar='[CAU→AUG]', help='RNA反向互补', type=str, required=False)
-optional.add_argument('-s3', '--seq3',
-                      metavar='[CAU→ATG]', help='RNA与DNA间反向互补', type=str, required=False)
-optional.add_argument('-s4', '--seq4',
-                      metavar='[U→T]', help='不反向不互补仅替换', type=str, required=False)
-optional.add_argument('-s5', '--seq5',
-                      metavar='[str.upper()]', help='字符串大写', type=str, required=False)
-optional.add_argument('-s6', '--seq6',
-                      metavar='[str.lower()]', help='字符串小写', type=str, required=False)
-
-optional.add_argument('-o', '--output',
-                      metavar='[ir_xxx.fasta]', help='输出反向后的fa文件', type=str, required=False)
-optional.add_argument('-h', '--help', action='help', help='[帮助信息]')
+optional2.add_argument('-s1', '--seq1', help='ATG→CAT', action='store_true')
+optional2.add_argument('-s2', '--seq2', help='CAU→AUG', action='store_true')
+optional2.add_argument('-s3', '--seq3', help='CAU→ATG', action='store_true')
+optional2.add_argument('-s4', '--seq4', help='U→T', action='store_true')
+optional2.add_argument(
+    '-s5', '--seq5', help='str.upper()', action='store_true')
+optional2.add_argument(
+    '-s6', '--seq6', help='str.lower()', action='store_true')
 args = parser.parse_args()
 
 
@@ -85,33 +90,38 @@ def ir2(s):  # RNA反向互补
     return c
 
 
-def readfasta(input_file):  # 将fa读取为字典
-    seq_id = ''
+def readfasta(fasta_path):  # 将fa文件读取为字典,自带判断是不是fasta格式文件
     seq_dict = {}
-    for line in input_file:
-        if line.startswith('>'):
-            seq_id = line.strip('\n')
-            seq_dict[seq_id] = ''
-        else:
-            seq_dict[seq_id] += line.strip('\n')
+    first_content = linecache.getline(fasta_path, 1)
+    if first_content.startswith('>'):
+        with open(fasta_path, 'r') as fa_handel:
+            seq_id = ''
+            seq_dict = {}
+            for line in fa_handel:
+                if line.startswith('>'):
+                    seq_id = line.strip()
+                    seq_dict[seq_id] = ''
+                else:
+                    seq_dict[seq_id] += line.strip()
+    elif not first_content.startswith('>'):
+        seq_dict[os.path.basename(fasta_path)] = first_content.strip()
     return seq_dict
 
 
-def judgment_input_type(string):  # 判断输入的是文件还是粘贴的序列
-    if os.path.isfile(string):
-        abs_path = os.path.abspath(string)
+def judgment_input_type(input_str):  # 判断输入的是文件还是粘贴的序列
+    seq_dict = {}
+    if os.path.isfile(input_str):
+        abs_path = os.path.abspath(input_str)
         abs_dir = os.path.dirname(abs_path)
-        input_file = open(string, 'r')
-        for line in input_file:
-            if len(line.strip('\n')):
-                seq = line.strip('\n')
+        seq_dict = readfasta(abs_path)
     else:
-        seq = string
+        seq_dict['undefined'] = input_str.strip()
         abs_dir = os.getcwd()
-    return seq, abs_dir
+    return seq_dict, abs_dir
 
 
 def gccount(seq):
+    seq = seq.upper()
     BaseSum = 0  # 碱基总个数初始化
     no_c, no_g, no_a, no_t, no_n = 0, 0, 0, 0, 0  # 各碱基数量
     BaseSum = len(seq)
@@ -120,69 +130,66 @@ def gccount(seq):
     no_a = seq.count('A')
     no_t = seq.count('T')
     no_n = seq.count('N')
-    # print(BaseSum)
-    # print('序列个数:'+str(len(Length)))
-    # print('最短的序列长度是:'+str(min(Length)))
-    # print('最长的序列长度是:'+str(max(Length)))
-    print("总碱基数目:", BaseSum)
-    print("A百分比", "%.1f" % ((float(no_a*100))/BaseSum), '%')
-    print("T百分比", "%.1f" % ((float(no_t*100))/BaseSum), '%')
-    print("C百分比", "%.1f" % ((float(no_c*100))/BaseSum), '%')
-    print("G百分比", "%.1f" % ((float(no_g*100))/BaseSum), '%')
-    print("N百分比", "%.1f" % ((float(no_n*100))/BaseSum), '%')
-    print("GC含量是", "%.1f" % ((float(no_g*100+no_c*100))/BaseSum), '%')
-    return 0
+    s = 'Total_base_number:{}bp\n\
+        A_percentage:{:.1f}%\n\
+            T_percentage:{:.1f}%\n\
+                C_percentage:{:.1f}%\n\
+                    G_percentage:{:.1f}%\n\
+                        N_percentage:{:.1f}%\n\
+                            GC_content:{:.1f}%\n'.format(
+        BaseSum, no_a*100/BaseSum, no_t*100/BaseSum, no_c*100/BaseSum, no_g*100/BaseSum, no_n*100/BaseSum, (no_g+no_c)*100/BaseSum)
+    return s
 
 
-if args.input:
-    input_file = open(args.input, 'r')
-    seq_dict = readfasta(input_file)
-    seq_id = list(seq_dict.keys())[0]
-    seq = list(seq_dict.values())[0]
-    if args.gccount:
-        gccount(seq)
-    if args.lenth:
-        print(len(seq))
-    ir_seq = ir1(seq)
-    # print(len(ir_seq))
-    if args.output:
-        output_file = open(args.output, 'w')
-        output_file.write(str(seq_id)+'\n')
-        output_file.write(ir_seq+'\n')
-        output_file.close()
-    input_file.close()
+# 必选参数
+seq_dict, abs_dir = judgment_input_type(args.input)
+# 可选参数组1
+if args.output and (not args.seq1) and (not args.seq2) and (not args.seq3) and (not args.seq4) and (not args.seq5) and (not args.seq6):
+    with open(args.output, 'w') as output_handle:
+        for seq_id, seq in seq_dict.items():
+            ir_seq = ir1(seq)
+            output_handle.write(seq_id+'\n')
+            output_handle.write(ir_seq+'\n')
     print('done')
+for seq_id, seq in seq_dict.items():
+    if args.gccount:
+        s = gccount(seq)
+        print(seq_id)
+        print(s)
+    if args.lenth:
+        print(len(seq), seq_id)
 
-if args.seq1:
-    (seq, abs_dir) = judgment_input_type(args.seq1)
-    if args.output:
-        file_name = args.output
-    else:
-        file_name = "s1.fa"
+# 可选参数组2
+n = 0
+for seq_id, seq in seq_dict.items():
+    n += 1
+    if args.seq1:
         print(ir1(seq))
-    out_path = os.path.join(abs_dir, file_name)  # 生成绝对路径
-    print(out_path)
-    output_file = open(out_path, 'w')
-    # print(os.path.abspath("s1.fa"))
-    # path = os.path.abspath(out_file)#获得绝对路径
-    # print(os.path.dirname(path))#绝对路径刨去文件名
-    output_file.write(ir1(seq)+'\n')
-    output_file.close()
-
-if args.seq2:
-    print(ir2(args.seq2))
-if args.seq3:
-    s = args.seq3
-    if s.find('T') >= 0:
-        c = ir1(s)
-        c = c.replace('T', 'U')
-    if s.find('U') >= 0:
-        c = ir2(s)
-        c = c.replace('U', 'T')
-    print(c)
-if args.seq4:
-    print(args.seq4.replace('U', 'T'))
-if args.seq5:
-    print(args.seq5.upper())
-if args.seq6:
-    print(args.seq6.lower())
+        if args.output:
+            file_name = args.output
+        else:
+            file_name = seq_id+'s1.fa'
+        out_path = os.path.join(abs_dir, file_name)  # 生成绝对路径
+        print(out_path)
+        with open(out_path, 'w') as output_file:
+            # print(os.path.abspath("s1.fa"))
+            # path = os.path.abspath(out_file)#获得绝对路径
+            # print(os.path.dirname(path))#绝对路径刨去文件名
+            output_file.write(ir1(seq)+'\n')
+    if args.seq2:
+        print(ir2(seq))
+    if args.seq3:
+        s = seq
+        if s.find('T') >= 0:
+            c = ir1(s)
+            c = c.replace('T', 'U')
+        if s.find('U') >= 0:
+            c = ir2(s)
+            c = c.replace('U', 'T')
+        print(c)
+    if args.seq4:
+        print(seq.replace('U', 'T'))
+    if args.seq5:
+        print(seq.upper())
+    if args.seq6:
+        print(seq.lower())
