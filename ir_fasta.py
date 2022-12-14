@@ -41,7 +41,7 @@ required.add_argument(
 # help='output  reverse-complementary fasta file',
 optional1.add_argument('-o', '--output', metavar='ir.fasta', type=str)
 optional1.add_argument(
-    '-l', '--lenth',  help='display sequence length', action='store_false')
+    '-l', '--lenth',  help='display sequence length', action='store_true')
 optional1.add_argument(
     '-gc', '--gccount', help='display sequence gc_count', action='store_true')
 
@@ -130,13 +130,13 @@ def gccount(seq):
     no_a = seq.count('A')
     no_t = seq.count('T')
     no_n = seq.count('N')
-    s = 'Total_base_number:{}bp\n\
-        A_percentage:{:.1f}%\n\
-            T_percentage:{:.1f}%\n\
-                C_percentage:{:.1f}%\n\
-                    G_percentage:{:.1f}%\n\
-                        N_percentage:{:.1f}%\n\
-                            GC_content:{:.1f}%\n'.format(
+    s = 'Total:{}bp\n\
+A_percentage:{:.1f}%\n\
+T_percentage:{:.1f}%\n\
+C_percentage:{:.1f}%\n\
+G_percentage:{:.1f}%\n\
+N_percentage:{:.1f}%\n\
+GC_content:{:.1f}%\n'.format(
         BaseSum, no_a*100/BaseSum, no_t*100/BaseSum, no_c*100/BaseSum, no_g*100/BaseSum, no_n*100/BaseSum, (no_g+no_c)*100/BaseSum)
     return s
 
@@ -150,14 +150,14 @@ if args.output and (not args.seq1) and (not args.seq2) and (not args.seq3) and (
             ir_seq = ir1(seq)
             output_handle.write(seq_id+'\n')
             output_handle.write(ir_seq+'\n')
-    print('done')
+    print('Done!')
 for seq_id, seq in seq_dict.items():
+    if args.lenth:
+        print(len(seq), seq_id.lstrip('>'))
     if args.gccount:
         s = gccount(seq)
-        print(seq_id)
-        print(s)
-    if args.lenth:
-        print(len(seq), seq_id)
+        print(seq_id.strip().lstrip('>')+'_'+s)
+
 
 # 可选参数组2
 n = 0
