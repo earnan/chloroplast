@@ -68,7 +68,7 @@ optional.add_argument(
 optional.add_argument(
     '-p', '--pos_str', metavar='[pos_str]', help="输入位置,形如'124353-124892:-;126001-126552:-'", type=str, default='72649-72876:-;73447-73737:-;74668-74724:-', required=False)
 optional.add_argument('-df', '--direction_flag',
-                      help='起始子查找方向,默认true向前(序列变长),向后则-df', action='store_false', required=False)
+                      help='起始子查找方向,默认true向前(即序列变长),-df则false向后(即序列变短)', action='store_false', required=False)
 optional.add_argument(
     '-m', '--maxnumber', metavar='[max_number]', help='最大递归查找次数,默认0,假查找', type=int, default=0, required=False)
 optional.add_argument('-trans', '--trans_flag',
@@ -90,6 +90,7 @@ if args.info:
     print('\t20221101 17:44  添加叶绿体起始子查找方向参数 默认向前查找(plus)')
     print('\t20221102 17:34  添加特定条件下内部有终止子的查找,待完善(for 5070项目rpl16/ndhI)')
     print('\t20221117  精简起始子向后查找部分代码')
+    print('\t20221215  修复代码逻辑错误')
     print('\n')
     sys.exit(0)
 
@@ -316,7 +317,7 @@ def loop_look(direction_flag, infasta, pos_str, trans_flag, loop_count, maxnumbe
 
             '''
             20221101 叶绿体
-            分向前找(flase)  向后找(args.direction_flag=true)
+            分向前找(true)  向后找(direction_flag=false)
             '''
             if direction_flag == False:
                 '''起始向后找 长度减小'''
@@ -549,11 +550,13 @@ if __name__ == '__main__':
     sorted_pos_list, first_stop_codon_index_in_protein_seq, \
         modified_pos_str, seq_check_flag = loop_look(args.direction_flag,
                                                      args.infasta, args.pos_str, args.trans_flag, loop_count, args.maxnumber, args.nuc_file_name, args.pro_file_name)
-    if seq_check_flag != 0 and args.maxnumber != 0 and seq_check_flag != 3:
-        direction_flag = False
+    '''
+    if seq_check_flag != 0 and args.maxnumber != 0 and seq_check_flag != 3 and args.direction_flag == True:  # 如果上面-m查找没找对，就执行向后查找
+        direction_flag = False  # 定义查找方向  false向后
         sorted_pos_list, first_stop_codon_index_in_protein_seq, \
             modified_pos_str, seq_check_flag = loop_look(direction_flag,
                                                          args.infasta, args.pos_str, args.trans_flag, loop_count, args.maxnumber, args.nuc_file_name, args.pro_file_name)
+    '''
     if type(first_stop_codon_index_in_protein_seq) == type(1):
         # modified_pos_str是对的，sorted_pos_list可能有问题
         get_current_first_end_pos(
