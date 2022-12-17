@@ -7,16 +7,16 @@
 #    Description:   cp_from_gbk_get_cds.py
 #        Version:   3.0
 #           Time:   2022/03/09 15:21:51
-#  Last Modified:   2022/12/06 16:45:02
+#  Last Modified:   2022/12/17 11:20:02
 #        Contact:   hi@arcsona.cn
-#        License:   Copyright (C) 2022
+#        License:   GNU General Public License v3.0
 #
 ##########################################################
 from Bio import SeqIO
 from Bio.Seq import Seq
 #from icecream import ic
 import argparse
-import linecache
+#import linecache
 import os
 # import pretty_errors
 import re
@@ -25,43 +25,26 @@ import time
 # import copy
 parser = argparse.ArgumentParser(
     add_help=False, usage='\n\
-\n\
-##########################################################\n\
-# \n\
-#       Filename:   cp_from_gbk_get_cds_V3.0.py\n\
-#         Author:   yujie\n\
-#    Description:   cp_from_gbk_get_cds_V3.0.py\n\
-#        Version:   3.0\n\
-#           Time:   2022/03/09 15:21:51\n\
-#  Last Modified:   2022/12/06 11:59:10\n\
-#        Contact:   hi@arcsona.cn\n\
-#        License:   Copyright (C) 2022\n\
-# \n\
-##########################################################\n\
-\n\
-\npython3   cp_from_gbk_get_cds_V3.0.py\n\
-功能：每个物种都生成cds、tRNA及完整序列3个文件\n\
-1.常规使用\n\
-1.1 -i [gbk dir] -o [out dir] \n\
-\n\
-##########################################################\n\
-Path: E:\OneDrive\jshy信息部\Script\chloroplast\phytree\cp_from_gbk_get_cds_V3.0.py\n\
-Path: /share/nas1/yuj/script/chloroplast/phytree/cp_from_gbk_get_cds_V3.0.py\n\
-Version: 3.0\n\
-##########################################################\n\
-'
-)
-optional = parser.add_argument_group('可选项')
-required = parser.add_argument_group('必选项')
-optional.add_argument(
-    '-i', '--input', metavar='[indir]', help='gbk dir', type=str, default='E:\\Examples\\cp_from_gbk_get_cds\\gbk',  required=False)
-optional.add_argument(
-    '-o', '--output', metavar='[outdir]', help='输出的路径', type=str, default='E:\\Examples\\cp_from_gbk_get_cds\\cds', required=False)
-optional.add_argument('-c', '--check', help='默认否,使用时-c',
+python3 cp_from_gbk_get_cds_V3.0.py -i [gbk dir] -o [out dir]\n\
+Each species generates three files of cds,trna and complete sequence.')
+optional = parser.add_argument_group('optional')
+required = parser.add_argument_group('required')
+required.add_argument(
+    '-i', '--input',  help='gbk dir path', type=str)
+required.add_argument(
+    '-o', '--output',  help='output dir path', type=str)
+optional.add_argument('-c', '--check', help='create genes via gap,not running by default,input "-c" when using',
                       action='store_true', required=False)
-optional.add_argument('-h', '--help', action='help', help='[帮助信息]')
+optional.add_argument('-info', '--info', help='show update log and exit',
+                      action='store_true', required=False)
+optional.add_argument('-h', '--help', action='help',
+                      help='show this help message and exit')
 args = parser.parse_args()
 
+if args.info:
+    print('\n更新日志:')
+    print('\t20221217 feat: ✨ 对gbk文件进行去重')
+    sys.exit(0)
 
 # ############################################################################################
 
@@ -109,7 +92,6 @@ def merge_sequence(ele, complete_seq):  # 合并获取到的序列
                 r'\d+', str(ele1.end))[0])  # 实际终点,不用+1
             # 切片没问题,索引从start到end-1,也就是对应start+1到end的序列
             gene_seq += complete_seq[ele1.start:ele1.end]
-    # print(tmp_list)
     return tmp_list, gene_seq
 
 
@@ -277,11 +259,11 @@ def get_gene(gbk_file, flag, dict_gene_len, file_no):  # 解析gbk文件获取cd
             gene_name = gene_name  # gene_name_standardization(gene_name)
             list_trna_name.append(gene_name)  # 存入列表
 
-    file_name = os.path.basename(gbk_file)
-    s = '{2}: {0}有{1}个CDS'.format(file_name, cds_count, file_no)
+    file_name = os.path.basename(gbk_file)  #
+    s = '{2}: {0} has {1} CDS'.format(file_name, cds_count, file_no)
     if cds_count == 0:
         # --------There may be no comments--------'.format(
-        s = '{2}: {0}有{1}个CDS'.format(file_name, cds_count, file_no)
+        s = '{2}: {0} has {1} CDS'.format(file_name, cds_count, file_no)
         print(s.ljust(50), '----------There may be no comments----------')
     elif cds_count != 0:
         # 20220811 输出左对齐  str.ljust(50)  达到50个字符宽度
@@ -314,30 +296,24 @@ if __name__ == '__main__':
     print('Start Time : {}'.format(start_time))
     #################################################################
     print('\n')
-
     if not os.path.exists(args.output):
-        os.mkdir(args.output)
-    """写入统计文件"""
-    '''
-    with open((args.output+os.sep+'log'), 'w') as f_log:
-        f_log.write(
-            'gene{0}atp6{0}atp8{0}cob{0}cox1{0}cox2{0}cox3{0}nad1{0}nad2{0}nad3{0}nad4{0}nad4L{0}nad5{0}nad6\n'.format('\t'))  # 小写
-        f_log.write(
-            'gene{0}ATP6{0}ATP8{0}CYTB{0}COX1{0}COX2{0}COX3{0}ND1{0}ND2{0}ND3{0}ND4{0}ND4L{0}ND5{0}ND6\n'.format('\t'))  # 大写
-    all_gene_list_upper = ['ATP6', 'ATP8', 'CYTB', 'COX1', 'COX2',
-                           'COX3', 'ND1', 'ND2', 'ND3', 'ND4', 'ND4L', 'ND5', 'ND6']
-    all_gene_list_lower = ['atp6', 'atp8', 'cob', 'cox1', 'cox2',
-                           'cox3', 'nad1', 'nad2', 'nad3', 'nad4', 'nad4l', 'nad5', 'nad6']
-    '''
+        os.makedirs(args.output)
+    if (not os.path.exists(os.path.join(args.output, 'trna'))):
+        os.makedirs(os.path.join(args.output, 'trna'))
+    if (not os.path.exists(os.path.join(args.output, 'cds'))):
+        os.makedirs(os.path.join(args.output, 'cds'))
+    if (not os.path.exists(os.path.join(args.output, 'complete'))):
+        os.makedirs(os.path.join(args.output, 'complete'))
+
     """统计初始化"""
     dict_missing_gene = {}  # 每个文件中缺失的基因统计,总 字典
     dict_gene_len = {}  # 统计每个基因在不同物种中的长度,取平均
-    # for i in all_gene_list_upper:
-    # dict_gene_len[i] = []
-
+    list_seq_id_de_duplication = []  # 去重的物种
+    list_unique_accession = []  # 去重的登录号
     """初始化"""
     dict_file_cds_count = {}  # 每个文件中cds计数
-    file_list = os.listdir(args.input)
+    file_list = [x for x in os.listdir(
+        args.input) if os.path.isfile(os.path.join(args.input, x))]
     file_list.sort()  # key=lambda x: int(x.split('.')[0])) #根据文件名中的数字
     """主程序"""
     file_no = 0
@@ -346,17 +322,28 @@ if __name__ == '__main__':
         ingbk_path = os.path.join(args.input, file)
         file_name, seq_id, complete_fasta, cds_fasta, cds_count, list_cds_name,  trna_fasta, trna_count, list_trna_name, dict_gene_len, s = get_gene(
             ingbk_path, False, dict_gene_len, file_no)
-        # print(file_name, 'done\n')
         dict_file_cds_count[file_name] = cds_count  # 每个文件中cds计数
-        """写入文件"""
-        with open((args.output+os.sep+seq_id+'.fasta'), 'wb') as f_complete, \
-                open((args.output+os.sep+'cds_'+file_name.rstrip('.gbk')+'.fasta'), 'wb') as f_cds,\
-                open((args.output+os.sep+'trna_'+file_name.rstrip('.gbk')+'.fasta'), 'wb') as f_trna:  # , \
-            # open((args.output+os.sep+'log'), 'a+') as f_log:
-            f_complete.write(complete_fasta.encode())
-            f_cds.write(cds_fasta.encode())
-            f_trna.write(trna_fasta.encode())
-
+        '''
+        20221217对gbk文件去重
+        '''
+        seq_id_content = seq_id.split('_')
+        if seq_id.find('NC_') > 0:
+            species = '_'.join(seq_id_content[:-2])
+            accession = '_'.join(seq_id_content[-2:])
+        else:
+            species = '_'.join(seq_id_content[:-1])
+            accession = '_'.join(seq_id_content[-1:])
+        if species not in list_seq_id_de_duplication:
+            list_seq_id_de_duplication.append(species)
+            list_unique_accession.append(accession)
+            """写入文件"""
+            with open((os.path.join(args.output, 'complete', seq_id+'.fasta')), 'wb') as f_complete, \
+                open((os.path.join(args.output, 'cds', 'cds_'+file_name.rstrip('.gbk')+'.fasta')), 'wb') as f_cds,\
+                    open((os.path.join(args.output, 'trna', 'trna_'+file_name.rstrip('.gbk')+'.fasta')), 'wb') as f_trna:
+                f_complete.write(complete_fasta.encode())
+                f_cds.write(cds_fasta.encode())
+                f_trna.write(trna_fasta.encode())
+    print('{} left after removing duplicates'.format(len(list_unique_accession)))
     print('\n')
     ###############################################################
     end_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
