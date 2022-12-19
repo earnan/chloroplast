@@ -14,9 +14,9 @@
 ##########################################################
 from Bio import SeqIO
 from Bio.Seq import Seq
-#from icecream import ic
+# from icecream import ic
 import argparse
-#import linecache
+# import linecache
 import os
 # import pretty_errors
 import re
@@ -44,6 +44,7 @@ args = parser.parse_args()
 if args.info:
     print('\n更新日志:')
     print('\t20221217 feat: ✨ 对gbk文件进行去重')
+    print('\t20221219 🐞fix(get_gene_note): 修改没有gene标签的cds的默认ID')
     sys.exit(0)
 
 # ############################################################################################
@@ -159,8 +160,9 @@ def get_complete_note(seq_record):  # 获取整个完整基因组ID
     return complete_note, seq_id
 
 
-def get_gene_note(ele, complete_seq, seq_id, tmp_gene_name):  # 获取gene的id及序列
+def get_gene_note(file_no, file_name, ele, complete_seq, seq_id, tmp_gene_name):  # 获取gene的id及序列
     '''
+    传入上一个基因信息tmp_gene_name,返回当前基因信息tmp_gene_name
     OrderedDict(
         [
         ('codon_start', ['1']),
@@ -176,10 +178,10 @@ def get_gene_note(ele, complete_seq, seq_id, tmp_gene_name):  # 获取gene的id�
     if 'gene' not in ele.qualifiers.keys():
         # 返回上一个基因,好从其他参考找这个没名字的
         try:
-            print(ele.qualifiers)
+            tmp_gene_name = tmp_gene_name+'_next'
         except:
             tmp_gene_name = input(
-                "\nPrevious: {0}. Current: {1}.\nPlease input current gene name:".format(tmp_gene_name, ele.location.parts))
+                "\n{0}: {1} Previous: {2}. Current: {3}.\nPlease input current gene name:".format(file_no, file_name, tmp_gene_name, ele.location.parts))
     else:
         tmp_gene_name = ele.qualifiers['gene'][0]
 
@@ -217,9 +219,10 @@ def gene_name_standardization(gene_name):  # 格式化基因名字,可重复使�
     return gene_name
 
 
-def get_gene(gbk_file, flag, dict_gene_len, file_no):  # 解析gbk文件获取cds
+def get_gene(gbk_file_path, flag, dict_gene_len, file_no):  # 解析gbk文件获取cds
     """完整基因组"""
-    seq_record = SeqIO.read(gbk_file, "genbank")
+    file_name = os.path.basename(gbk_file_path)
+    seq_record = SeqIO.read(gbk_file_path, "genbank")
     complete_seq = str(seq_record.seq)
     complete_note, seq_id = get_complete_note(seq_record)
     complete_fasta = format_fasta(complete_note, complete_seq, 80)  # 80换行本例不采用
@@ -241,7 +244,7 @@ def get_gene(gbk_file, flag, dict_gene_len, file_no):  # 解析gbk文件获取cd
         if ele.type == "CDS":
             cds_count += 1
             cds_note, cds_seq, tmp_gene_name = get_gene_note(
-                ele, complete_seq, seq_id, tmp_gene_name)
+                file_no, file_name, ele, complete_seq, seq_id, tmp_gene_name)
             # list_cds_name.append(tmp_gene_name)  # 本次的基因名字 复用
             cds_fasta += format_fasta(cds_note, cds_seq, 70)
             gene_name = tmp_gene_name
@@ -253,13 +256,12 @@ def get_gene(gbk_file, flag, dict_gene_len, file_no):  # 解析gbk文件获取cd
         elif ele.type == 'tRNA':
             trna_count += 1
             trna_note, trna_seq, tmp_gene_name = get_gene_note(
-                ele, complete_seq, seq_id, tmp_gene_name)
+                file_no, file_name, ele, complete_seq, seq_id, tmp_gene_name)
             trna_fasta += format_fasta(trna_note, trna_seq, 70)
             gene_name = tmp_gene_name
             gene_name = gene_name  # gene_name_standardization(gene_name)
             list_trna_name.append(gene_name)  # 存入列表
 
-    file_name = os.path.basename(gbk_file)  #
     s = '{2}: {0} has {1} CDS'.format(file_name, cds_count, file_no)
     if cds_count == 0:
         # --------There may be no comments--------'.format(
@@ -319,9 +321,10 @@ if __name__ == '__main__':
     file_no = 0
     for file in file_list:
         file_no += 1
-        ingbk_path = os.path.join(args.input, file)
-        file_name, seq_id, complete_fasta, cds_fasta, cds_count, list_cds_name,  trna_fasta, trna_count, list_trna_name, dict_gene_len, s = get_gene(
-            ingbk_path, False, dict_gene_len, file_no)
+        gbk_file_path = os.path.join(args.input, file)
+        file_name, seq_id, complete_fasta, cds_fasta, cds_count, list_cds_name,  \
+            trna_fasta, trna_count, list_trna_name, dict_gene_len, s = get_gene(
+                gbk_file_path, False, dict_gene_len, file_no)
         dict_file_cds_count[file_name] = cds_count  # 每个文件中cds计数
         '''
         20221217对gbk文件去重
