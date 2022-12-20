@@ -45,6 +45,7 @@ if args.info:
     print('\n更新日志:')
     print('\t20221217 feat: ✨ 对gbk文件进行去重')
     print('\t20221219 🐞fix(get_gene_note): 修改没有gene标签的cds的默认ID')
+    print('\t20221220 ✨feat(main): 写入去重后的登录号')
     sys.exit(0)
 
 # ############################################################################################
@@ -347,6 +348,9 @@ if __name__ == '__main__':
                 f_cds.write(cds_fasta.encode())
                 f_trna.write(trna_fasta.encode())
     print('{} left after removing duplicates'.format(len(list_unique_accession)))
+    with open((os.path.join(args.output, 'list_tre')), 'w') as list_handle:
+        for i in list_unique_accession:
+            list_handle.write(i+'\n')
     print('\n')
     ###############################################################
     end_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
